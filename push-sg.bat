@@ -1,4 +1,4 @@
-for %%a in (.) do set currentfolder=%%~na
+@for %%a in (.) do @set currentfolder=%%~na
 @set HOME=%userprofile%
 
 @call git add --all
@@ -6,7 +6,8 @@ for %%a in (.) do set currentfolder=%%~na
 @if [%1] == [] @call git -c "user.name=Velko Nikolov" -c "user.email=velko.nikolov@gmail.com" commit
 @if NOT [%1] == [] @call git -c "user.name=Velko Nikolov" -c "user.email=velko.nikolov@gmail.com" commit -m %*
 
-@call ssh-temp siteground git push ssh://trusting@ams7.siteground.eu:18765/home/trusting/public_html/%currentfolder% master
+@call ssh-key sg
+@call ssh-temp sg git push ssh://trusting@ams7.siteground.eu:18765/home/trusting/public_html/%currentfolder% master
 
 :: right now origin is the same
 :: @call git push origin master
