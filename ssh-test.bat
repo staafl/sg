@@ -1,0 +1,1 @@
+ssh trusting@ams7.siteground.eu -p 18765

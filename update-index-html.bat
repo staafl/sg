@@ -1,0 +1,1 @@
+for /f %%x in ('dir /b /AD ^| findstr ^^^^[a-z0-9A-Z]') do copy new\index.html %%x\index.html /Y
