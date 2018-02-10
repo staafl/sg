@@ -1,4 +1,4 @@
-denyCurrentBranch = ignore
+git config receive.denyCurrentBranch updateInstead
 
 This stuff is uploaded via ssh-git at ssh://trusting@ams7.siteground.eu:18765/home/trusting/public_html/%currentfolder%
 Key is in dropbox/keys/.ssh/sg/R1p;
