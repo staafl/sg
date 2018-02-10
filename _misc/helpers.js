@@ -36,6 +36,9 @@ function setup(options) {
 
     setupScene(options.sceneOptions);
 
+    // backward
+    window.scene = window.cgi.scene;
+
     if (options.gridEnabled) {
         drawGrids(options.gridOptions);
     }
@@ -55,9 +58,6 @@ function setup(options) {
     if (options.startAnimating) {
         animate(options.animateOptions);
     }
-
-    // backward
-    window.scene = window.cgi.scene;
 }
 
 // setup renderer, scene, camera and controls
