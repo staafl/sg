@@ -11,4 +11,4 @@
 :: OBSOLETE: @call ssh-key %currentfolder%
 @call ssh-temp %currentfolder% git push ssh://trusting@ams7.siteground.eu:18765/home/trusting/public_html/%currentfolder% master
 
-@call git push https://github.com/staafl/currentfolder.git master
+@call git push https://github.com/staafl/%currentfolder%.git master
