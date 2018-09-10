@@ -1,5 +1,5 @@
-@call mong.bat 3333
-@start "" "http://localhost:3333/%1"
+@call mong.bat 3333 %1
+::@start "" "http://localhost:3333/%1"
 
 
 :: OBSOLETE
