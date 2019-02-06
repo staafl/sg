@@ -1,6 +1,6 @@
 git config receive.denyCurrentBranch updateInstead
 
-This stuff is uploaded via ssh-git at ssh://trusting@ams7.siteground.eu:18765/home/trusting/public_html/%currentfolder%
+This stuff is uploaded via ssh-git at #sg-git
 Key is in dropbox/keys/.ssh/sg/R1p;
 Template for new demos is in _new\
 index.html is the same everywhere, code is only supposed to go in source.js and styles.css
