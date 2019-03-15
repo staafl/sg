@@ -1,18 +1,24 @@
 import { Ray } from './ray';
 import { Vec } from './vec';
 
+export interface HitInfo
+{
+    hitParam: number;
+    hitPoint: Vec;
+    hitPointNormal: Vec;
+}
+
 export interface Hitable
 {
     type: "sphere";
-    hitByRay: (Ray) => number;
-    hitpointNormal: (Ray) => Vec;
+    hitByRay: (Ray) => HitInfo;
 }
 
 export interface Scene
 {
     dimu: number,
     dimv: number,
-    objects: [Hitable]
+    objects: Hitable[]
 }
 
 // u/v - uniform coordinate system of the viewport

@@ -99,11 +99,19 @@ Object.defineProperties(exports, {
     console.log(`drawing done: ${new Date().getTime() - started} ms`);
 }
 function getColor(scene, tracedRay) {
+    let closestHit = null;
     for (const obj of scene.objects) {
-        const hp = obj.hitpointNormal(tracedRay);
-        if (hp) {
-            return new Vec(hp.x + 1, hp.y + 1, hp.z + 1, 0).scale(0.5);
+        const hit = obj.hitByRay(tracedRay);
+        if (hit) {
+            if (!closestHit ||
+                closestHit.hitPoint.length > hit.hitPoint.length) {
+                closestHit = hit;
+            }
         }
+    }
+    if (closestHit) {
+        return new Vec(closestHit.hitPointNormal.x + 1, closestHit.hitPointNormal.y + 1, closestHit.hitPointNormal.z + 1, 0)
+            .scale(0.5);
     }
     // background: hyperbolic gradient
     // among all rays that hit the viewport at a given v', the one with the highest
@@ -199,10 +207,11 @@ const userSettings = {
 };
 // scene
 const getCenterSphere = (userSettings) => new Sphere(new Vec(0, 0, -1, 0), userSettings.radius);
+const getLeftSphere = (userSettings) => new Sphere(new Vec(-0.6, -0.2, -1, 0), userSettings.radius);
 const getScene = userSettings => ({
     dimu: 600,
     dimv: 600,
-    objects: [getCenterSphere(userSettings)]
+    objects: [getCenterSphere(userSettings), getLeftSphere(userSettings)]
 });
 // drawing canvas
 const canvas = document.getElementById('canvas');
@@ -281,18 +290,24 @@ Object.defineProperties(exports, {
     get type() {
         return "sphere";
     }
-    hitpointNormal(ray) {
-        const hitpoint = this.hitByRay(ray);
-        if (!(hitpoint > 0)) {
+    hitByRay(ray) {
+        const hitParam = this.hitByRayParam(ray);
+        if (!(hitParam > 0)) {
             return null;
         }
-        return ray
+        const hitPoint = ray
             .origin
-            .add(ray.direction.scale(hitpoint))
+            .add(ray.direction.scale(hitParam));
+        const hitPointNormal = hitPoint
             .sub(this.center)
             .normalize();
+        return {
+            hitParam,
+            hitPoint,
+            hitPointNormal
+        };
     }
-    hitByRay(ray) {
+    hitByRayParam(ray) {
         const radius = this.radius;
         const oc = ray.origin.sub(this.center);
         const a = ray.direction.dot(ray.direction);

@@ -24,11 +24,16 @@ const getCenterSphere = (userSettings) => new Sphere(
     new Vec(0, 0, -1, 0),
     userSettings.radius);
 
-const getScene: (UserSettings) => Scene = 
+const getLeftSphere = (userSettings) => new Sphere(
+    new Vec(-0.6, -0.2, -1, 0),
+    userSettings.radius);
+
+
+const getScene: (UserSettings) => Scene =
     userSettings => ({
         dimu: 600,
         dimv: 600,
-        objects: [getCenterSphere(userSettings)]
+        objects: [getCenterSphere(userSettings), getLeftSphere(userSettings)]
     });
 
 

@@ -1,5 +1,5 @@
+import { Scene, UserSettings, HitInfo } from './types';
 import { Vec } from './vec';
-import { Scene, UserSettings } from './types';
 import { Ray } from './ray';
 
 export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
@@ -37,12 +37,25 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
 
 
 function getColor(scene: Scene, tracedRay: Ray): Vec {
+    let closestHit: HitInfo = null;
     for (const obj of scene.objects) {
-        const hp = obj.hitpointNormal(tracedRay);
+        const hit = obj.hitByRay(tracedRay);
         
-        if (hp) {
-            return new Vec(hp.x + 1, hp.y + 1, hp.z + 1, 0).scale(0.5);
+        if (hit) {
+            if (!closestHit ||
+                closestHit.hitPoint.length > hit.hitPoint.length) {
+                closestHit = hit;
+            }
         }
+    }
+    
+    if (closestHit) {
+        
+        return new Vec(
+                closestHit.hitPointNormal.x + 1,
+                closestHit.hitPointNormal.y + 1,
+                closestHit.hitPointNormal.z + 1, 0)
+            .scale(0.5);
     }
 
     // background: hyperbolic gradient

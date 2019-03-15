@@ -1,4 +1,4 @@
-import { Hitable } from './types';
+import { Hitable, HitInfo } from './types';
 import { Ray } from './ray';
 import { Vec } from './vec';
 
@@ -28,22 +28,30 @@ export class Sphere implements Hitable
         return "sphere";
     }
 
-    hitpointNormal(ray: Ray)
+    hitByRay(ray: Ray): HitInfo
     {
-        const hitpoint = this.hitByRay(ray);
-        if (!(hitpoint > 0))
+        const hitParam = this.hitByRayParam(ray);
+        if (!(hitParam > 0))
         {
             return null;
         }
 
-        return ray
+        const hitPoint = ray
             .origin
-            .add(ray.direction.scale(hitpoint))
+            .add(ray.direction.scale(hitParam));
+
+        const hitPointNormal = hitPoint
             .sub(this.center)
             .normalize();
+
+        return {
+            hitParam,
+            hitPoint,
+            hitPointNormal
+        };
     }
 
-    hitByRay(ray: Ray): number
+    hitByRayParam(ray: Ray): number
     {
         const radius = this.radius;
         const oc = ray.origin.sub(this.center);
