@@ -58,67 +58,56 @@
     return require
   }
 
-  Pax.files["c:/btsync/sg/rayweekend/drawing.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cdrawing$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cdrawing$2ejs.deps = {"./ray":file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs,"./vec":file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_c$3a$5cbtsync$5csg$5crayweekend$5cdrawing$2ejs.filename = "c:/btsync/sg/rayweekend/drawing.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cdrawing$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/draw.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs.deps = {"./ray":file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs,"./vec":file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs.filename = "C:/btsync/sg/rayweekend/draw.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
 with (function() {
   const __module0 = require._esModule('./vec')
   const __module1 = require._esModule('./ray')
   return Object.freeze(Object.create(null, {
     [Symbol.toStringTag]: {value: 'ModuleImports'},
-    vec: {get() {return __module0.vec}, enumerable: true},
-    ray: {get() {return __module1.ray}, enumerable: true},
+    Vec: {get() {return __module0.Vec}, enumerable: true},
+    Ray: {get() {return __module1.Ray}, enumerable: true},
   }))
 }()) ~function() {
 'use strict';
 Object.defineProperties(exports, {
   draw: {get() {return draw}, enumerable: true},
-  clearCanvas: {get() {return clearCanvas}, enumerable: true},
-  drawPixel: {get() {return drawPixel}, enumerable: true},
 });
 
      ;
      ;
-
- function draw(scene, getColor) {
-
+ function draw(ctx, scene, getColor, userSettings) {
     const started = new Date().getTime();
-
-    clearCanvas(scene.ctx, scene.dimu, scene.dimv);
-
+    clearCanvas(ctx, scene.dimu, scene.dimv);
     // our camera
-    const origin = vec();
-
+    const origin = new Vec(0, 0, 0, 0);
     // lower left corner of the viewport in camera coordinate system
-    const lowerLeft = vec(-1, -1, -1);
-
-    // such that lowerLeft + vvec + vvec = vec(-lowerLeft.x, -lowerLeft.y, lowerLeft.z);
-    const uvec = vec(scene.userSettings.uvecX, 0, 0);
-    const vvec = vec(0, scene.userSettings.vvecY, 0);
-
+    const lowerLeft = new Vec(-1, -1, -1, 0);
+    // such that lowerLeft + vvec + vvec = new Vec(-lowerLeft.x, -lowerLeft.y, lowerLeft.z);
+    const uvec = new Vec(userSettings.uvecX, 0, 0, 0);
+    const vvec = new Vec(0, userSettings.vvecY, 0, 0);
     for (let u = 0; u < scene.dimu; u += 1) {
         for (let v = 0; v < scene.dimv; v += 1) {
             const ur = u / scene.dimu; // [0;1)
             const vr = v / scene.dimv; // [0;1)
-
             // a ray from the camera to a pixel in the viewport
-            const tracedRay = ray(origin, lowerLeft.add(uvec.scale(ur), vvec.scale(vr)));
-
-            const color = getColor(tracedRay);
-
-            drawPixel(scene.ctx, u, v, color);
+            const tracedRay = new Ray(origin, lowerLeft.add(uvec.scale(ur), vvec.scale(vr)));
+            const color = getColor(scene, tracedRay);
+            //            if (u % 100 == 0 && v % 100 == 0)
+            //            {
+            //                console.log(u, v, color)
+            //            }
+            drawPixel(ctx, u, v, color);
         }
     }
-
     console.log(`drawing done: ${new Date().getTime() - started} ms`);
 }
-
- function clearCanvas(ctx, dimu, dimv) {
+function clearCanvas(ctx, dimu, dimv) {
     ctx.clearRect(0, 0, dimu, dimv);
     ctx.fillStyle = '#cccccc';
     ctx.fillRect(0, 0, dimu, dimv);
 }
-
- function drawPixel(ctx, x, y, color) {
+function drawPixel(ctx, x, y, color) {
     // ((x + y) / 256) * (256 - 255.99) > y
     // (x + y) * 0.01/256 > y
     // x > 255.99y
@@ -128,97 +117,38 @@ Object.defineProperties(exports, {
     // 120.001 / 256 => 0.46875390625
     // 0.46875390625 * 255.99 => 119.996312460938
     const fill = "rgb(" +
-                    Math.floor(color[0] * 255.99) + "," +
-                    Math.floor(color[1] * 255.99) + "," +
-                    Math.floor(color[2] * 255.99) + ")";
-
-    ctx.fillStyle = fill
-
+        Math.floor(color.r * 255.99) + "," +
+        Math.floor(color.g * 255.99) + "," +
+        Math.floor(color.b * 255.99) + ")";
+    ctx.fillStyle = fill;
     //if (x % 10 === 0 && y % 10 === 0) {
     //    console.log(JSON.stringify({ x, y, fill }));
     //}
     ctx.fillRect(x, y, 1, 1);
 }
 }()}
-  Pax.files["c:/btsync/sg/rayweekend/index.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.deps = {"./drawing":file_c$3a$5cbtsync$5csg$5crayweekend$5cdrawing$2ejs,"./misc":file_c$3a$5cbtsync$5csg$5crayweekend$5cmisc$2ejs,"./ray":file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs,"./vec":file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.filename = "c:/btsync/sg/rayweekend/index.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/getColor.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cgetColor$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cgetColor$2ejs.deps = {"./vec":file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_C$3a$5cbtsync$5csg$5crayweekend$5cgetColor$2ejs.filename = "C:/btsync/sg/rayweekend/getColor.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cgetColor$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
 with (function() {
   const __module0 = require._esModule('./vec')
-  const __module1 = require._esModule('./ray')
-  const __module2 = require._esModule('./drawing')
-  const __module3 = require._esModule('./misc')
   return Object.freeze(Object.create(null, {
     [Symbol.toStringTag]: {value: 'ModuleImports'},
-    vec: {get() {return __module0.vec}, enumerable: true},
-    ray: {get() {return __module1.ray}, enumerable: true},
-    draw: {get() {return __module2.draw}, enumerable: true},
-    setupGui: {get() {return __module3.setupGui}, enumerable: true},
+    Vec: {get() {return __module0.Vec}, enumerable: true},
   }))
 }()) ~function() {
 'use strict';
-
-// %USER_BACK%\btsync\books\cg\Ray Tracing in a Weekend.pdf
-
-     ;
-     ;
-     ;
-     ;
-
-const canvas = document.getElementById('canvas');
-
-// u/v - uniform coordinate system of the viewport
-// origin is top left, u goes left to right, v - top to bottom
-// corresponds to browser's x/y, but we're using x/y/z for camera coordinate system
-
-const ctx = canvas.getContext('2d');
-const userSettings = {
-    uvecX: { name: "X", initial: 2, min: -4, max: 4, step: 0.1 },
-    vvecY: { name: "Y", initial: 2, min: -2, max: 2, step: 0.1 },
-    radius: { name: "radius", initial: 0.2, min: 0, max: 4, step: 0.1 },
-};
-
-const sphere = () => ({
-    type: "sphere",
-    center: vec(0, 0, -1),
-    radius: userSettings.radius
+Object.defineProperties(exports, {
+  getColor: {get() {return getColor}, enumerable: true},
 });
 
-const scene = {
-    dimu: 600,
-    dimv: 600,
-    objects: [sphere],
-    ctx,
-    userSettings
-}
-
-
-canvas.width = scene.dimu;
-canvas.height = scene.dimv;
-
-const doDraw = () => draw(scene, getColor);
-
-setupGui(scene.userSettings, doDraw);
-
-function intersectsSphere(tracedRay, sphere) {
-    const radius = sphere.radius;
-    const oc = tracedRay.origin.sub(sphere.center);
-    const a = tracedRay.direction.dot(tracedRay.direction);
-    const b = 2 * oc.dot(tracedRay.direction);
-    const c = oc.dot(oc) - sphere.radius * sphere.radius;
-    const disc = b * b - 4 * a * c;
-    return disc >= 0;
-}
-
-function getColor(tracedRay) {
+     ;
+ function getColor(scene, tracedRay) {
     for (const obj of scene.objects) {
-        const resolved = obj();
-        if (resolved.type === "sphere") {
-            if (intersectsSphere(tracedRay, resolved)) {
-                return vec(1, 0, 0);
-            }
+        if (obj.isHit(tracedRay)) {
+            return new Vec(1, 0, 0, 0);
         }
     }
-
+    // background: hyperbolic gradient
     // among all rays that hit the viewport at a given v', the one with the highest
     // normalized abs(y) is the one with x = 0 (the one going directly towards the viewport)
     // all vectors from the origin have the same non-normalized y (=v'), divided by a length
@@ -239,229 +169,244 @@ function getColor(tracedRay) {
     // among rays with x=0, the highest normalized y is the one hitting at the highest v, so
     // the brightest place is the top center; analogously, the dimmest place is the bottom center
     const unitDirection = tracedRay.direction.normalize();
-    const t = 0.5*(unitDirection.y + 1);
-    const color = vec(0, 0, 0).interpolate(vec(1, 1, 1), t);
+    const t = 0.5 * (unitDirection.y + 1);
+    const color = new Vec(0, 0, 0, 0).interpolate(new Vec(1, 1, 1, 0), t);
     return color;
-    // (square (abs(x - 0.5)))*sgn(x - 0.5) + 0.5 from 0 to 1
-//    if (color.r > 0.3 && color.r < 0.31) {
-//        return vec(1, 0, 0);
-//    } else if (color.r > 0.7 && color.r < 0.71) {
-//        return vec(0, 1, 0);
-//    } else if (color.r > 0.49 && color.r < 0.51) {
-//        return vec(1, 1, 1);
-//    } else if (color.r > 0.8 && color.r < 0.81) {
-//        return vec(0, 0, 1);
-//    }
-//    return vec();
+    //    (square (abs(x - 0.5)))*sgn(x - 0.5) + 0.5 from 0 to 1
+    //    if (color.r > 0.3 && color.r < 0.31) {
+    //        return new Vec(1, 0, 0);
+    //    } else if (color.r > 0.7 && color.r < 0.71) {
+    //        return new Vec(0, 1, 0);
+    //    } else if (color.r > 0.49 && color.r < 0.51) {
+    //        return new Vec(1, 1, 1);
+    //    } else if (color.r > 0.8 && color.r < 0.81) {
+    //        return new Vec(0, 0, 1);
+    //    }
+    //    return new Vec();
 }
-
-
-
-doDraw();
 }()}
-  Pax.files["c:/btsync/sg/rayweekend/misc.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cmisc$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cmisc$2ejs.deps = {}; file_c$3a$5cbtsync$5csg$5crayweekend$5cmisc$2ejs.filename = "c:/btsync/sg/rayweekend/misc.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cmisc$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/index.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.deps = {"./draw":file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs,"./setupSettingsGui":file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs,"./getColor":file_C$3a$5cbtsync$5csg$5crayweekend$5cgetColor$2ejs,"./sphere":file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs,"./vec":file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.filename = "C:/btsync/sg/rayweekend/index.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+Object.defineProperty(exports, '__esModule', {value: true})
+with (function() {
+  const __module0 = require._esModule('./getColor')
+  const __module1 = require._esModule('./vec')
+  const __module2 = require._esModule('./draw')
+  const __module3 = require._esModule('./sphere')
+  const __module4 = require._esModule('./setupSettingsGui')
+  return Object.freeze(Object.create(null, {
+    [Symbol.toStringTag]: {value: 'ModuleImports'},
+    getColor: {get() {return __module0.getColor}, enumerable: true},
+    Vec: {get() {return __module1.Vec}, enumerable: true},
+    draw: {get() {return __module2.draw}, enumerable: true},
+    Sphere: {get() {return __module3.Sphere}, enumerable: true},
+    setupSettingsGui: {get() {return __module4.setupSettingsGui}, enumerable: true},
+  }))
+}()) ~function() {
+'use strict';
+
+// %USER_BACK%\btsync\books\cg\Ray Tracing in a Weekend.pdf
+     ;
+     ;
+     ;
+     ;
+     ;
+const getCenterSphere = (userSettings) => new Sphere(new Vec(0, 0, -1, 0), userSettings.radius);
+const userSettings = {
+    uvecX: { name: "X", initial: 2, min: -4, max: 4, step: 0.1 },
+    vvecY: { name: "Y", initial: 2, min: -2, max: 2, step: 0.1 },
+    radius: { name: "radius", initial: 0.2, min: 0, max: 4, step: 0.1 },
+};
+const getScene = userSettings => ({
+    dimu: 600,
+    dimv: 600,
+    objects: [getCenterSphere(userSettings)]
+});
+const canvas = document.getElementById('canvas');
+canvas.width = getScene(userSettings).dimu;
+canvas.height = getScene(userSettings).dimv;
+const ctx = canvas.getContext('2d');
+const drawScene = () => draw(ctx, getScene(userSettings), getColor, userSettings);
+setupSettingsGui(userSettings, drawScene);
+drawScene();
+}()}
+  Pax.files["C:/btsync/sg/rayweekend/ray.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs.deps = {}; file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs.filename = "C:/btsync/sg/rayweekend/ray.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
 ~function() {
 'use strict';
 Object.defineProperties(exports, {
-  synonymize: {get() {return synonymize}, enumerable: true},
-  setupGui: {get() {return setupGui}, enumerable: true},
+  Ray: {get() {return Ray}, enumerable: true},
 });
 
-// from [x, r, e1] defines properties x => _x, r => _x, e1 => _x
- function synonymize(obj, synonyms) {
-    for (const synonymSet of synonyms) {
-        const main = synonymSet[0];
-        for (const other of synonymSet) {
-            Object.defineProperty(
-                obj,
-                other,
-                {
-                    get: function() {
-                        return this["_" + main];
-                    }
-                });
-        }
+ class Ray {
+    constructor(origin, direction) {
+        this._origin = origin;
+        this._direction = direction;
+    }
+    get origin() {
+        return this._origin;
+    }
+    get direction() {
+        return this._direction;
+    }
+    toString() {
+        return JSON.stringify({ o: this.origin + "", d: this.direction + "" }).replace(/"/g, "");
     }
 }
+}()}
+  Pax.files["C:/btsync/sg/rayweekend/setupSettingsGui.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs.deps = {}; file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs.filename = "C:/btsync/sg/rayweekend/setupSettingsGui.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+Object.defineProperty(exports, '__esModule', {value: true})
+~function() {
+'use strict';
+Object.defineProperties(exports, {
+  setupSettingsGui: {get() {return setupSettingsGui}, enumerable: true},
+});
 
- function setupGui(userSettings, onChange) {
-	var gui = new dat.GUI();
-
-    var listen = ctrl => ctrl.onFinishChange(x => onChange);
-
+ function setupSettingsGui(userSettings, onChange) {
+    const gui = new dat.GUI();
     for (const key of Object.keys(userSettings)) {
         const userSetting = userSettings[key];
-        userSettings[key] = userSetting.initial
-        const step = userSetting.step || (userSettings.max - userSettings.min / 100);
-        const newSetting = gui.add(
-            userSettings,
-            key,
-            userSetting.min,
-            userSetting.max)
+        userSettings[key] = userSetting.initial;
+        const step = userSetting.step || (userSetting.max - userSetting.min / 100);
+        const newSetting = gui.add(userSettings, key, userSetting.min, userSetting.max)
             .step(step)
             .name(userSetting.name || key);
-
-        listen(newSetting);
+        newSetting.onFinishChange(x => onChange);
     }
 }
 }()}
-  Pax.files["c:/btsync/sg/rayweekend/ray.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs.deps = {"./misc":file_c$3a$5cbtsync$5csg$5crayweekend$5cmisc$2ejs}; file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs.filename = "c:/btsync/sg/rayweekend/ray.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/sphere.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs.deps = {}; file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs.filename = "C:/btsync/sg/rayweekend/sphere.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
-with (function() {
-  const __module0 = require._esModule('./misc')
-  return Object.freeze(Object.create(null, {
-    [Symbol.toStringTag]: {value: 'ModuleImports'},
-    synonymize: {get() {return __module0.synonymize}, enumerable: true},
-  }))
-}()) ~function() {
+~function() {
 'use strict';
 Object.defineProperties(exports, {
-  ray: {get() {return ray}, enumerable: true},
+  Sphere: {get() {return Sphere}, enumerable: true},
 });
 
-     ;
-
-const rayProto = {};
-synonymize(rayProto, [["direction"], ["origin"]]);
-rayProto.toString = function() {
-    return JSON.stringify({ o: this.origin + "", d: this.direction + "" }).replace(/"/g, "");
-}
-
- function ray(origin, direction) {
-    const toReturn = Object.create(rayProto);
-
-    toReturn._origin = origin;
-    toReturn._direction = direction;
-
-    return toReturn;
-}
-
-}()}
-  Pax.files["c:/btsync/sg/rayweekend/vec.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs.deps = {"./misc":file_c$3a$5cbtsync$5csg$5crayweekend$5cmisc$2ejs}; file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs.filename = "c:/btsync/sg/rayweekend/vec.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
-Object.defineProperty(exports, '__esModule', {value: true})
-with (function() {
-  const __module0 = require._esModule('./misc')
-  return Object.freeze(Object.create(null, {
-    [Symbol.toStringTag]: {value: 'ModuleImports'},
-    synonymize: {get() {return __module0.synonymize}, enumerable: true},
-  }))
-}()) ~function() {
-'use strict';
-Object.defineProperties(exports, {
-  vec: {get() {return vec}, enumerable: true},
-});
-
-     ;
-
-const vecProto = {};
-
-const vectorSynonyms = [
-    ['x','r','0'],
-    ['y','g','1'],
-    ['z','b','2'],
-    ['w','a','3'],
-];
-
-synonymize(vecProto, vectorSynonyms);
-
-vecProto.add = function() {
-    let toReturn = this;
-    for (const v2 of arguments) {
-        toReturn = vec(
-            toReturn.x + v2.x,
-            toReturn.y + v2.y,
-            toReturn.z + v2.z,
-            toReturn.w + v2.w);
+ class Sphere {
+    constructor(center, radius) {
+        this._center = center;
+        this._radius = radius;
     }
-    return toReturn;
-};
+    get center() {
+        return this._center;
+    }
+    get radius() {
+        return this._radius;
+    }
+    get type() {
+        return "sphere";
+    }
+    isHit(tracedRay) {
+        const radius = this.radius;
+        const oc = tracedRay.origin.sub(this.center);
+        const a = tracedRay.direction.dot(tracedRay.direction);
+        const b = 2 * oc.dot(tracedRay.direction);
+        const c = oc.dot(oc) - this.radius * this.radius;
+        const disc = b * b - 4 * a * c;
+        return disc >= 0;
+    }
+}
+}()}
+  Pax.files["C:/btsync/sg/rayweekend/vec.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs.deps = {}; file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs.filename = "C:/btsync/sg/rayweekend/vec.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+Object.defineProperty(exports, '__esModule', {value: true})
+~function() {
+'use strict';
+Object.defineProperties(exports, {
+  Vec: {get() {return Vec}, enumerable: true},
+});
 
-vecProto.scale = function(s) {
-    return vec(this.x * s, this.y * s, this.z * s, this.w * s);
-};
-
-vecProto.normalize = function() {
-    return this.scale(1 / this.length);
-};
-
-vecProto.sub = function(v2) {
-    return this.add(v2.neg());
-};
-
-vecProto.interpolate = function(v2, t) {
-    return this.scale(t).add(v2.scale(1 - t));
-};
-
-vecProto.neg = function() {
-    return this.scale(-1);
-//    howMany = typeof howMany === "undefined" ? 4 : howMany;
-//    return vec(
-//        howMany > 0 ? -this.x : this.x,
-//        howMany > 1 ? -this.y : this.y,
-//        howMany > 2 ? -this.z : this.z,
-//        howMany > 3 ? -this.w : this.w,
-//        );
-};
-
-vecProto.dot = function(v2) {
-    return this.x * v2.x + this.y * v2.y + this.z * v2.z + this.w * v2.w;
-};
-
-vecProto.cross = function(v2) {
-    /*
-    yz - zy
-    -xz + zx
-    xy - yx
-    */
-    return vec(
-        this.y * v2.z - this.z * v2.y,
-        -this.x * v2.z + this.z * v2.x,
-        this.x * v2.y - this.y * v2.x,
-        this.w); // todo: 4d vector cross product
-};
-vecProto.toString = function() {
-    return JSON.stringify([
+ class Vec {
+    constructor(x, y, z, w) {
+        this._x = x;
+        this._y = y;
+        this._z = z;
+        this._w = w;
+    }
+    get x() {
+        return this._x;
+    }
+    get y() {
+        return this._y;
+    }
+    get z() {
+        return this._z;
+    }
+    get w() {
+        return this._w;
+    }
+    get r() {
+        return this._x;
+    }
+    get g() {
+        return this._y;
+    }
+    get b() {
+        return this._z;
+    }
+    get a() {
+        return this._w;
+    }
+    add(...args) {
+        let toReturn = this;
+        for (const v2 of args) {
+            toReturn = new Vec(toReturn.x + v2.x, toReturn.y + v2.y, toReturn.z + v2.z, toReturn.w + v2.w);
+        }
+        return toReturn;
+    }
+    scale(s) {
+        return new Vec(this.x * s, this.y * s, this.z * s, this.w * s);
+    }
+    sub(v2) {
+        return this.add(v2.neg());
+    }
+    neg() {
+        return this.scale(-1);
+        //    howMany = typeof howMany === "undefined" ? 4 : howMany;
+        //    return new Vec(
+        //        howMany > 0 ? -this.x : this.x,
+        //        howMany > 1 ? -this.y : this.y,
+        //        howMany > 2 ? -this.z : this.z,
+        //        howMany > 3 ? -this.w : this.w,
+        //        );
+    }
+    normalize() {
+        return this.scale(1 / this.length);
+    }
+    interpolate(v2, t) {
+        return this.scale(t).add(v2.scale(1 - t));
+    }
+    dot(v2) {
+        return this.x * v2.x + this.y * v2.y + this.z * v2.z + this.w * v2.w;
+    }
+    cross(v2) {
+        /*
+        yz - zy
+        -xz + zx
+        xy - yx
+        */
+        return new Vec(this.y * v2.z - this.z * v2.y, -this.x * v2.z + this.z * v2.x, this.x * v2.y - this.y * v2.x, this.w); // todo: 4d vector cross product
+    }
+    toString() {
+        return JSON.stringify([
             this.x.toFixed(2),
             this.y.toFixed(2),
             this.z.toFixed(2),
-            this.w.toFixed(2)])
-        .replace(/"/g, "");
-};
-
-Object.defineProperty(
-    vecProto,
-    'squaredLength',
-    {
-        get: function() {
-            return Math.pow(this.x, 2) +
-                Math.pow(this.y, 2) +
-                Math.pow(this.z, 2) +
-                Math.pow(this.w, 2);
-            }
-    });
-
-Object.defineProperty(
-    vecProto,
-    'length',
-    {
-        get: function() {
-            return Math.sqrt(this.squaredLength)
-        }
-    });
-
- function vec(x, y, z, w) {
-    const toReturn = Object.create(vecProto);
-
-    toReturn._x = x || 0;
-    toReturn._y = y || 0;
-    toReturn._z = z || 0;
-    toReturn._w = w || 0;
-
-    return toReturn;
+            this.w.toFixed(2)
+        ])
+            .replace(/"/g, "");
+    }
+    get squaredLength() {
+        return Math.pow(this.x, 2) +
+            Math.pow(this.y, 2) +
+            Math.pow(this.z, 2) +
+            Math.pow(this.w, 2);
+    }
+    get length() {
+        return Math.sqrt(this.squaredLength);
+    }
 }
 }()}
-  Pax.main = file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; Pax.makeRequire(null)()
+  Pax.main = file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; Pax.makeRequire(null)()
   if (typeof module !== 'undefined') module.exports = Pax.main.module && Pax.main.module.exports
 }(typeof global !== "undefined" ? global : typeof window !== "undefined" ? window : this)
 //# sourceMappingURL=output.js.map
