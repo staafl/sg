@@ -1,9 +1,11 @@
 import { Ray } from './ray';
+import { Vec } from './vec';
 
 export interface Hitable
 {
     type: "sphere";
-    isHit: (Ray) => boolean;
+    hitByRay: (Ray) => number;
+    hitpointNormal: (Ray) => Vec;
 }
 
 export interface Scene
