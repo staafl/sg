@@ -79,19 +79,24 @@ Object.defineProperties(exports, {
  function draw(ctx, scene, userSettings) {
     const started = new Date().getTime();
     clearCanvas(ctx, scene.dimu, scene.dimv);
-    // our camera
-    const origin = new Vec(0, 0, 0, 0);
-    // lower left corner of the viewport in camera coordinate system
-    const lowerLeft = new Vec(-1, -1, -1, 0);
-    // such that lowerLeft + vvec + vvec = new Vec(-lowerLeft.x, -lowerLeft.y, lowerLeft.z);
-    const uvec = new Vec(userSettings.uvecX, 0, 0, 0);
-    const vvec = new Vec(0, userSettings.vvecY, 0, 0);
+    const origin = scene.camera.origin;
+    const dir = scene.camera.direction.normalize();
+    const up = scene.up.normalize();
+    const viewportRight = dir.cross(up).normalize();
+    const viewportCenter = origin.add(dir.scale(scene.fov));
+    // upper left corner of the viewport in world coordinate system
+    const upperLeft = viewportCenter.add(viewportRight.neg(), up);
+    // such that upperLeft + vvec + vvec = new Vec(-upperLeft.x, -upperLeft.y, upperLeft.z),
+    // i.e. the right lower corner
+    const uvec = viewportCenter.add(viewportRight.scale(userSettings.uvecX)).setZ(0);
+    const vvec = viewportCenter.add(up.scale(userSettings.vvecY).neg()).setZ(0);
+    console.log({ upperLeft, uvec, vvec, viewportRight, viewportCenter });
     for (let u = 0; u < scene.dimu; u += 1) {
         for (let v = 0; v < scene.dimv; v += 1) {
             const ur = u / scene.dimu; // [0;1)
             const vr = v / scene.dimv; // [0;1)
             // a ray from the camera to a pixel in the viewport
-            const tracedRay = new Ray(origin, lowerLeft.add(uvec.scale(ur), vvec.scale(vr)));
+            const tracedRay = new Ray(origin, upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
             const color = getColor(scene, tracedRay);
             drawPixel(ctx, u, v, color);
         }
@@ -177,24 +182,27 @@ function drawPixel(ctx, x, y, color) {
     ctx.fillRect(x, y, 1, 1);
 }
 }()}
-  Pax.files["c:/btsync/sg/rayweekend/index.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.deps = {"./draw":file_c$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs,"./setupSettingsGui":file_c$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs,"./sphere":file_c$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs,"./vec":file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.filename = "c:/btsync/sg/rayweekend/index.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["c:/btsync/sg/rayweekend/index.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.deps = {"./draw":file_c$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs,"./setupSettingsGui":file_c$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs,"./sphere":file_c$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs,"./ray":file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs,"./vec":file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.filename = "c:/btsync/sg/rayweekend/index.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
 with (function() {
-  const __module0 = require._esModule('./vec')
-  const __module1 = require._esModule('./draw')
-  const __module2 = require._esModule('./sphere')
-  const __module3 = require._esModule('./setupSettingsGui')
+  const __module0 = require._esModule('./ray')
+  const __module1 = require._esModule('./vec')
+  const __module2 = require._esModule('./draw')
+  const __module3 = require._esModule('./sphere')
+  const __module4 = require._esModule('./setupSettingsGui')
   return Object.freeze(Object.create(null, {
     [Symbol.toStringTag]: {value: 'ModuleImports'},
-    Vec: {get() {return __module0.Vec}, enumerable: true},
-    draw: {get() {return __module1.draw}, enumerable: true},
-    Sphere: {get() {return __module2.Sphere}, enumerable: true},
-    setupSettingsGui: {get() {return __module3.setupSettingsGui}, enumerable: true},
+    Ray: {get() {return __module0.Ray}, enumerable: true},
+    Vec: {get() {return __module1.Vec}, enumerable: true},
+    draw: {get() {return __module2.draw}, enumerable: true},
+    Sphere: {get() {return __module3.Sphere}, enumerable: true},
+    setupSettingsGui: {get() {return __module4.setupSettingsGui}, enumerable: true},
   }))
 }()) ~function() {
 'use strict';
 
 // %USER_BACK%\btsync\books\cg\Ray Tracing in a Weekend.pdf
+     ;
      ;
      ;
      ;
@@ -206,12 +214,24 @@ const userSettings = {
     radius: { name: "radius", initial: 0.2, min: 0, max: 4, step: 0.1 },
 };
 // scene
-const getCenterSphere = (userSettings) => new Sphere(new Vec(0, 0, -1, 0), userSettings.radius);
-const getLeftSphere = (userSettings) => new Sphere(new Vec(-0.6, -0.2, -1, 0), userSettings.radius);
+const sphereDistance = 10;
+const fov = 10;
+const getSphere = (userSettings, ox, oy) => new Sphere(new Vec(0 + ox, 0 + oy, -sphereDistance, 0), userSettings.radius);
 const getScene = userSettings => ({
     dimu: 600,
     dimv: 600,
-    objects: [getCenterSphere(userSettings), getLeftSphere(userSettings)]
+    camera: new Ray(new Vec(0, 0, 0, 0), new Vec(0, 0, -1, 0)),
+    fov: fov,
+    up: new Vec(0, 1, 0, 0),
+    objects: [
+        getSphere(userSettings, 0, 0),
+        getSphere(userSettings, -0.2, -0.2),
+        getSphere(userSettings, 0.2, 0),
+        getSphere(userSettings, -0.4, -0.4),
+        getSphere(userSettings, 0.4, 0),
+        getSphere(userSettings, -0.6, -0.6),
+        getSphere(userSettings, 0.6, 0),
+    ]
 });
 // drawing canvas
 const canvas = document.getElementById('canvas');
@@ -346,14 +366,26 @@ Object.defineProperties(exports, {
     get x() {
         return this._x;
     }
+    setX(x) {
+        return new Vec(x, this.y, this.z, this.w);
+    }
     get y() {
         return this._y;
+    }
+    setY(y) {
+        return new Vec(this.x, y, this.z, this.w);
     }
     get z() {
         return this._z;
     }
+    setZ(z) {
+        return new Vec(this.x, this.y, z, this.w);
+    }
     get w() {
         return this._w;
+    }
+    setW(w) {
+        return new Vec(this.x, this.y, this.z, w);
     }
     get r() {
         return this._x;

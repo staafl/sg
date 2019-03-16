@@ -3,6 +3,7 @@
 // the meat of the thing is in draw.ts, functions draw and getColor
 
 import { Scene, UserSettings } from './types';
+import { Ray } from './ray';
 import { Vec } from './vec';
 import { draw } from './draw';
 import { Sphere } from './sphere';
@@ -20,20 +21,29 @@ const userSettings: UserSettings = {
 
 // scene
 
-const getCenterSphere = (userSettings) => new Sphere(
-    new Vec(0, 0, -1, 0),
-    userSettings.radius);
+const sphereDistance = 10;
+const fov = 10;
 
-const getLeftSphere = (userSettings) => new Sphere(
-    new Vec(-0.6, -0.2, -1, 0),
+const getSphere = (userSettings, ox, oy) => new Sphere(
+    new Vec(0 + ox, 0 + oy, -sphereDistance, 0),
     userSettings.radius);
-
 
 const getScene: (UserSettings) => Scene =
     userSettings => ({
         dimu: 600,
         dimv: 600,
-        objects: [getCenterSphere(userSettings), getLeftSphere(userSettings)]
+        camera: new Ray(new Vec(0, 0, 0, 0), new Vec(0, 0, -1, 0)),
+        fov: fov,
+        up: new Vec(0, 1, 0, 0),
+        objects: [
+            getSphere(userSettings, 0, 0),
+            getSphere(userSettings, -0.2, -0.2),
+            getSphere(userSettings, 0.2, 0),
+            getSphere(userSettings, -0.4, -0.4),
+            getSphere(userSettings, 0.4, 0),
+            getSphere(userSettings, -0.6, -0.6),
+            getSphere(userSettings, 0.6, 0),
+        ]
     });
 
 

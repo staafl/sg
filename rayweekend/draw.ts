@@ -8,15 +8,24 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
 
     clearCanvas(ctx, scene.dimu, scene.dimv);
 
-    // our camera
-    const origin = new Vec(0, 0, 0, 0);
+    const origin = scene.camera.origin;
+    const dir = scene.camera.direction.normalize();
+    const up = scene.up.normalize();
 
-    // lower left corner of the viewport in camera coordinate system
-    const lowerLeft = new Vec(-1, -1, -1, 0);
+    const viewportRight = dir.cross(up).normalize();
+    const viewportCenter = origin.add(dir.scale(scene.fov));
 
-    // such that lowerLeft + vvec + vvec = new Vec(-lowerLeft.x, -lowerLeft.y, lowerLeft.z);
-    const uvec = new Vec(userSettings.uvecX, 0, 0, 0);
-    const vvec = new Vec(0, userSettings.vvecY, 0, 0);
+    // upper left corner of the viewport in world coordinate system
+    const upperLeft = viewportCenter.add(
+        viewportRight.neg(),
+        up);
+
+    // such that upperLeft + vvec + vvec = new Vec(-upperLeft.x, -upperLeft.y, upperLeft.z),
+    // i.e. the right lower corner
+    const uvec = viewportCenter.add(viewportRight.scale(userSettings.uvecX)).setZ(0);
+    const vvec = viewportCenter.add(up.scale(userSettings.vvecY).neg()).setZ(0);
+
+    console.log({ upperLeft, uvec, vvec, viewportRight, viewportCenter });
 
     for (let u = 0; u < scene.dimu; u += 1) {
         for (let v = 0; v < scene.dimv; v += 1) {
@@ -24,7 +33,9 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
             const vr = v / scene.dimv; // [0;1)
 
             // a ray from the camera to a pixel in the viewport
-            const tracedRay = new Ray(origin, lowerLeft.add(uvec.scale(ur), vvec.scale(vr)));
+            const tracedRay = new Ray(
+                origin,
+                upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
 
             const color = getColor(scene, tracedRay);
 
@@ -40,7 +51,7 @@ function getColor(scene: Scene, tracedRay: Ray): Vec {
     let closestHit: HitInfo = null;
     for (const obj of scene.objects) {
         const hit = obj.hitByRay(tracedRay);
-        
+
         if (hit) {
             if (!closestHit ||
                 closestHit.hitPoint.length > hit.hitPoint.length) {
@@ -48,9 +59,9 @@ function getColor(scene: Scene, tracedRay: Ray): Vec {
             }
         }
     }
-    
+
     if (closestHit) {
-        
+
         return new Vec(
                 closestHit.hitPointNormal.x + 1,
                 closestHit.hitPointNormal.y + 1,

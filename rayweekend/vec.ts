@@ -12,10 +12,15 @@ export class Vec
         this._z = z;
         this._w = w;
     }
-    
+
     get x(): number
     {
         return this._x;
+    }
+
+    setX(x: number): Vec
+    {
+        return new Vec(x, this.y, this.z, this.w);
     }
 
     get y(): number
@@ -23,14 +28,29 @@ export class Vec
         return this._y;
     }
 
+    setY(y: number): Vec
+    {
+        return new Vec(this.x, y, this.z, this.w);
+    }
+
     get z(): number
     {
         return this._z;
     }
 
+    setZ(z: number): Vec
+    {
+        return new Vec(this.x, this.y, z, this.w);
+    }
+
     get w(): number
     {
         return this._w;
+    }
+
+    setW(w: number): Vec
+    {
+        return new Vec(this.x, this.y, this.z, w);
     }
 
     get r(): number

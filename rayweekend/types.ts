@@ -18,7 +18,10 @@ export interface Scene
 {
     dimu: number,
     dimv: number,
-    objects: Hitable[]
+    objects: Hitable[],
+    camera: Ray,
+    fov: number,
+    up: Vec
 }
 
 // u/v - uniform coordinate system of the viewport
