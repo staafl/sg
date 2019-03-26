@@ -30,11 +30,11 @@ const getSphere = (userSettings, ox, oy) => new Sphere(
 
 const getScene: (UserSettings) => Scene =
     userSettings => ({
-        dimu: 600,
-        dimv: 600,
+        dimu: 300, //600,
+        dimv: 300, //600,
         camera: new Ray(new Vec(0, 0, 0, 0), new Vec(0, 0, -1, 0)),
         fov: fov,
-        up: new Vec(0, 1, 0, 0),
+        up: new Vec(0.5, 1, 0, 0),
         objects: [
             getSphere(userSettings, 0, 0),
             getSphere(userSettings, -0.2, -0.2),

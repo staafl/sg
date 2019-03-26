@@ -91,25 +91,38 @@ Object.defineProperties(exports, {
     const uvec = viewportCenter.add(viewportRight.scale(userSettings.uvecX)).setZ(0);
     const vvec = viewportCenter.add(up.scale(userSettings.vvecY).neg()).setZ(0);
     console.log({ upperLeft, uvec, vvec, viewportRight, viewportCenter });
+    const samples = 4;
+    const samplesRoot = Math.sqrt(samples);
     for (let u = 0; u < scene.dimu; u += 1) {
-        for (let v = 0; v < scene.dimv; v += 1) {
-            const ur = u / scene.dimu; // [0;1)
-            const vr = v / scene.dimv; // [0;1)
-            // a ray from the camera to a pixel in the viewport
-            const tracedRay = new Ray(origin, upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
-            const color = getColor(scene, tracedRay);
-            drawPixel(ctx, u, v, color);
-        }
+        setTimeout(function () {
+            for (let v = 0; v < scene.dimv; v += 1) {
+                const colors = [];
+                for (let us = 0; us < samplesRoot; ++us) {
+                    for (let vs = 0; vs < samplesRoot; ++vs) {
+                        // for each (u, v) pixel in the viewport
+                        const ur = (u + us / samplesRoot) / scene.dimu; // [0;1)
+                        const vr = (v + vs / samplesRoot) / scene.dimv; // [0;1)
+                        // create a ray from the camera to the pixel
+                        const tracedRay = new Ray(origin, upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
+                        const color = getColor(scene, tracedRay);
+                        colors.push(color);
+                    }
+                }
+                const averageColor = colors.reduce((s, c) => s.add(c), new Vec(0, 0, 0, 0)).scale(1 / colors.length);
+                drawPixel(ctx, u, v, averageColor);
+            }
+        }, 1);
     }
     console.log(`drawing done: ${new Date().getTime() - started} ms`);
 }
 function getColor(scene, tracedRay) {
+    const origin = scene.camera.origin;
     let closestHit = null;
     for (const obj of scene.objects) {
         const hit = obj.hitByRay(tracedRay);
         if (hit) {
             if (!closestHit ||
-                closestHit.hitPoint.length > hit.hitPoint.length) {
+                closestHit.hitPoint.sub(origin).length > hit.hitPoint.sub(origin).length) {
                 closestHit = hit;
             }
         }
@@ -218,11 +231,11 @@ const sphereDistance = 10;
 const fov = 10;
 const getSphere = (userSettings, ox, oy) => new Sphere(new Vec(0 + ox, 0 + oy, -sphereDistance, 0), userSettings.radius);
 const getScene = userSettings => ({
-    dimu: 600,
-    dimv: 600,
+    dimu: 300,
+    dimv: 300,
     camera: new Ray(new Vec(0, 0, 0, 0), new Vec(0, 0, -1, 0)),
     fov: fov,
-    up: new Vec(0, 1, 0, 0),
+    up: new Vec(0.5, 1, 0, 0),
     objects: [
         getSphere(userSettings, 0, 0),
         getSphere(userSettings, -0.2, -0.2),

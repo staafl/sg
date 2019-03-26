@@ -27,20 +27,34 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
 
     console.log({ upperLeft, uvec, vvec, viewportRight, viewportCenter });
 
+    const samples = 4;
+    const samplesRoot = Math.sqrt(samples);
     for (let u = 0; u < scene.dimu; u += 1) {
-        for (let v = 0; v < scene.dimv; v += 1) {
-            const ur = u / scene.dimu; // [0;1)
-            const vr = v / scene.dimv; // [0;1)
+        setTimeout(function() {
+            for (let v = 0; v < scene.dimv; v += 1) {
+                const colors = [];
+                for (let us = 0; us < samplesRoot; ++us) {
+                    for (let vs = 0; vs < samplesRoot; ++vs) {
+                        // for each (u, v) pixel in the viewport
 
-            // a ray from the camera to a pixel in the viewport
-            const tracedRay = new Ray(
-                origin,
-                upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
+                        const ur = (u + us/samplesRoot) / scene.dimu; // [0;1)
+                        const vr = (v + vs/samplesRoot) / scene.dimv; // [0;1)
 
-            const color = getColor(scene, tracedRay);
+                        // create a ray from the camera to the pixel
 
-            drawPixel(ctx, u, v, color);
-        }
+                        const tracedRay = new Ray(
+                            origin,
+                            upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
+
+                        const color = getColor(scene, tracedRay);
+                        colors.push(color);
+                    }
+                }
+                const averageColor = colors.reduce((s, c) => s.add(c), new Vec(0,0,0,0)).scale(1 / colors.length);
+                drawPixel(ctx, u, v, averageColor);
+            }
+        },
+        1);
     }
 
     console.log(`drawing done: ${new Date().getTime() - started} ms`);
@@ -48,13 +62,14 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
 
 
 function getColor(scene: Scene, tracedRay: Ray): Vec {
+    const origin = scene.camera.origin;
     let closestHit: HitInfo = null;
     for (const obj of scene.objects) {
         const hit = obj.hitByRay(tracedRay);
 
         if (hit) {
-            if (!closestHit ||
-                closestHit.hitPoint.length > hit.hitPoint.length) {
+                if (!closestHit ||
+                    closestHit.hitPoint.sub(origin).length > hit.hitPoint.sub(origin).length) {
                 closestHit = hit;
             }
         }
