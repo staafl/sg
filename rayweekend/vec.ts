@@ -12,6 +12,12 @@ export class Vec
         this._z = z;
         this._w = w;
     }
+    
+    static average(vectors: Vec[]): Vec {
+        return vectors
+            .reduce((s, c) => s.add(c), new Vec(0,0,0,0))
+            .scale(1 / vectors.length);
+    }
 
     get x(): number
     {

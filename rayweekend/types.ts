@@ -1,27 +1,29 @@
+import { HM } from './hm';
 import { Ray } from './ray';
 import { Vec } from './vec';
 
 export interface HitInfo
 {
+    // distance along the ray measured as scaling factor of 'ray.direction'
     hitParam: number;
     hitPoint: Vec;
     hitPointNormal: Vec;
+    hm: HM;
 }
 
-export interface Hitable
+export interface Material
 {
-    type: "sphere";
-    hitByRay: (Ray) => HitInfo;
+    getColor(hitInfo: HitInfo, scene: Scene);
 }
 
 export interface Scene
 {
     dimu: number,
     dimv: number,
-    objects: Hitable[],
+    objects: HM[],
     camera: Ray,
-    fov: number,
-    up: Vec
+    viewportDistance: number,
+    cameraUpDirection: Vec
 }
 
 // u/v - uniform coordinate system of the viewport

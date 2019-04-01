@@ -58,7 +58,7 @@
     return require
   }
 
-  Pax.files["c:/btsync/sg/rayweekend/draw.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs.deps = {"./ray":file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs,"./vec":file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_c$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs.filename = "c:/btsync/sg/rayweekend/draw.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/draw.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs.deps = {"./ray":file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs,"./vec":file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs.filename = "C:/btsync/sg/rayweekend/draw.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
 with (function() {
   const __module0 = require._esModule('./vec')
@@ -79,18 +79,20 @@ Object.defineProperties(exports, {
  function draw(ctx, scene, userSettings) {
     const started = new Date().getTime();
     clearCanvas(ctx, scene.dimu, scene.dimv);
-    const origin = scene.camera.origin;
-    const dir = scene.camera.direction.normalize();
-    const up = scene.up.normalize();
-    const viewportRight = dir.cross(up).normalize();
-    const viewportCenter = origin.add(dir.scale(scene.fov));
+    const cameraPosition = scene.camera.origin;
+    const cameraDir = scene.camera.direction.normalize();
+    const cameraUpDir = scene.cameraUpDirection.normalize();
+    const viewportRightDir = cameraDir.cross(cameraUpDir).normalize();
+    const viewportCenter = cameraPosition.add(cameraDir.scale(scene.viewportDistance));
     // upper left corner of the viewport in world coordinate system
-    const upperLeft = viewportCenter.add(viewportRight.neg(), up);
+    const upperLeft = viewportCenter.add(viewportRightDir.neg(), cameraUpDir);
+    // vectors used to trace out pixels on the viewport;
     // such that upperLeft + vvec + vvec = new Vec(-upperLeft.x, -upperLeft.y, upperLeft.z),
     // i.e. the right lower corner
-    const uvec = viewportCenter.add(viewportRight.scale(userSettings.uvecX)).setZ(0);
-    const vvec = viewportCenter.add(up.scale(userSettings.vvecY).neg()).setZ(0);
-    console.log({ upperLeft, uvec, vvec, viewportRight, viewportCenter });
+    const uvec = viewportCenter.add(viewportRightDir.scale(userSettings.uvecX)).setZ(0);
+    const vvec = viewportCenter.add(cameraUpDir.scale(userSettings.vvecY).neg()).setZ(0);
+    console.log("Viewport calculations", { upperLeft, uvec, vvec, viewportRightDir, viewportCenter });
+    // the actual ray casting happens here
     const samples = 4;
     const samplesRoot = Math.sqrt(samples);
     for (let u = 0; u < scene.dimu; u += 1) {
@@ -103,12 +105,12 @@ Object.defineProperties(exports, {
                         const ur = (u + us / samplesRoot) / scene.dimu; // [0;1)
                         const vr = (v + vs / samplesRoot) / scene.dimv; // [0;1)
                         // create a ray from the camera to the pixel
-                        const tracedRay = new Ray(origin, upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
+                        const tracedRay = new Ray(cameraPosition, upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
                         const color = getColor(scene, tracedRay);
                         colors.push(color);
                     }
                 }
-                const averageColor = colors.reduce((s, c) => s.add(c), new Vec(0, 0, 0, 0)).scale(1 / colors.length);
+                const averageColor = Vec.average(colors);
                 drawPixel(ctx, u, v, averageColor);
             }
         }, 1);
@@ -116,20 +118,23 @@ Object.defineProperties(exports, {
     console.log(`drawing done: ${new Date().getTime() - started} ms`);
 }
 function getColor(scene, tracedRay) {
-    const origin = scene.camera.origin;
+    const cameraPosition = scene.camera.origin;
     let closestHit = null;
-    for (const obj of scene.objects) {
-        const hit = obj.hitByRay(tracedRay);
+    let closestHitDistance = undefined;
+    for (const hm of scene.objects) {
+        const hit = hm.hitable.hitByRay(tracedRay);
         if (hit) {
-            if (!closestHit ||
-                closestHit.hitPoint.sub(origin).length > hit.hitPoint.sub(origin).length) {
+            let thisHitDistance;
+            if (closestHitDistance === undefined ||
+                closestHitDistance >
+                    (thisHitDistance = hit.hitPoint.sub(cameraPosition).length)) {
                 closestHit = hit;
+                closestHitDistance = thisHitDistance;
             }
         }
     }
     if (closestHit) {
-        return new Vec(closestHit.hitPointNormal.x + 1, closestHit.hitPointNormal.y + 1, closestHit.hitPointNormal.z + 1, 0)
-            .scale(0.5);
+        return closestHit.hm.material.getColor(closestHit, scene);
     }
     // background: hyperbolic gradient
     // among all rays that hit the viewport at a given v', the one with the highest
@@ -151,8 +156,8 @@ function getColor(scene, tracedRay) {
     //
     // among rays with x=0, the highest normalized y is the one hitting at the highest v, so
     // the brightest place is the top center; analogously, the dimmest place is the bottom center
-    const unitDirection = tracedRay.direction.normalize();
-    const t = 0.5 * (unitDirection.y + 1);
+    const unitDir = tracedRay.direction.normalize();
+    const t = 0.5 * (unitDir.y + 1);
     const color = new Vec(0, 0, 0, 0).interpolate(new Vec(1, 1, 1, 0), t);
     return color;
     //    another way to get increasingly rapid change of value away from the midline
@@ -195,26 +200,68 @@ function drawPixel(ctx, x, y, color) {
     ctx.fillRect(x, y, 1, 1);
 }
 }()}
-  Pax.files["c:/btsync/sg/rayweekend/index.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.deps = {"./draw":file_c$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs,"./setupSettingsGui":file_c$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs,"./sphere":file_c$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs,"./ray":file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs,"./vec":file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.filename = "c:/btsync/sg/rayweekend/index.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/hitable.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5chitable$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5chitable$2ejs.deps = {}; file_C$3a$5cbtsync$5csg$5crayweekend$5chitable$2ejs.filename = "C:/btsync/sg/rayweekend/hitable.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5chitable$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+Object.defineProperty(exports, '__esModule', {value: true})
+~function() {
+'use strict';
+Object.defineProperties(exports, {
+  Hitable: {get() {return Hitable}, enumerable: true},
+});
+
+ class Hitable {
+    get hm() {
+        return this.__hm;
+    }
+}
+}()}
+  Pax.files["C:/btsync/sg/rayweekend/hm.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5chm$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5chm$2ejs.deps = {}; file_C$3a$5cbtsync$5csg$5crayweekend$5chm$2ejs.filename = "C:/btsync/sg/rayweekend/hm.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5chm$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+Object.defineProperty(exports, '__esModule', {value: true})
+~function() {
+'use strict';
+Object.defineProperties(exports, {
+  HM: {get() {return HM}, enumerable: true},
+});
+
+ class HM {
+    constructor(hitable, material) {
+        this._hitable = hitable;
+        this._material = material;
+        hitable.__hm = this;
+    }
+    get hitable() {
+        return this._hitable;
+    }
+    get material() {
+        return this._material;
+    }
+}
+}()}
+  Pax.files["C:/btsync/sg/rayweekend/index.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.deps = {"./normalMaterial":file_C$3a$5cbtsync$5csg$5crayweekend$5cnormalMaterial$2ejs,"./draw":file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs,"./setupSettingsGui":file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs,"./sphere":file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs,"./hm":file_C$3a$5cbtsync$5csg$5crayweekend$5chm$2ejs,"./ray":file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs,"./vec":file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.filename = "C:/btsync/sg/rayweekend/index.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
 with (function() {
-  const __module0 = require._esModule('./ray')
-  const __module1 = require._esModule('./vec')
-  const __module2 = require._esModule('./draw')
-  const __module3 = require._esModule('./sphere')
-  const __module4 = require._esModule('./setupSettingsGui')
+  const __module0 = require._esModule('./normalMaterial')
+  const __module1 = require._esModule('./hm')
+  const __module2 = require._esModule('./ray')
+  const __module3 = require._esModule('./vec')
+  const __module4 = require._esModule('./draw')
+  const __module5 = require._esModule('./sphere')
+  const __module6 = require._esModule('./setupSettingsGui')
   return Object.freeze(Object.create(null, {
     [Symbol.toStringTag]: {value: 'ModuleImports'},
-    Ray: {get() {return __module0.Ray}, enumerable: true},
-    Vec: {get() {return __module1.Vec}, enumerable: true},
-    draw: {get() {return __module2.draw}, enumerable: true},
-    Sphere: {get() {return __module3.Sphere}, enumerable: true},
-    setupSettingsGui: {get() {return __module4.setupSettingsGui}, enumerable: true},
+    NormalMaterial: {get() {return __module0.NormalMaterial}, enumerable: true},
+    HM: {get() {return __module1.HM}, enumerable: true},
+    Ray: {get() {return __module2.Ray}, enumerable: true},
+    Vec: {get() {return __module3.Vec}, enumerable: true},
+    draw: {get() {return __module4.draw}, enumerable: true},
+    Sphere: {get() {return __module5.Sphere}, enumerable: true},
+    setupSettingsGui: {get() {return __module6.setupSettingsGui}, enumerable: true},
   }))
 }()) ~function() {
 'use strict';
 
 // %USER_BACK%\btsync\books\cg\Ray Tracing in a Weekend.pdf
+     ;
+     ;
      ;
      ;
      ;
@@ -226,37 +273,64 @@ const userSettings = {
     vvecY: { name: "Y", initial: 2, min: -2, max: 2, step: 0.1 },
     radius: { name: "radius", initial: 0.2, min: 0, max: 4, step: 0.1 },
 };
-// scene
+// getSceneFromUserSettings() :: UserSettings => Scene
 const sphereDistance = 10;
-const fov = 10;
-const getSphere = (userSettings, ox, oy) => new Sphere(new Vec(0 + ox, 0 + oy, -sphereDistance, 0), userSettings.radius);
-const getScene = userSettings => ({
-    dimu: 300,
-    dimv: 300,
-    camera: new Ray(new Vec(0, 0, 0, 0), new Vec(0, 0, -1, 0)),
-    fov: fov,
-    up: new Vec(0.5, 1, 0, 0),
-    objects: [
-        getSphere(userSettings, 0, 0),
-        getSphere(userSettings, -0.2, -0.2),
-        getSphere(userSettings, 0.2, 0),
-        getSphere(userSettings, -0.4, -0.4),
-        getSphere(userSettings, 0.4, 0),
-        getSphere(userSettings, -0.6, -0.6),
-        getSphere(userSettings, 0.6, 0),
-    ]
+const viewportDistance = 10;
+const cameraOrigin = new Vec(0, 0, 0, 0);
+const cameraDirection = new Vec(0, 0, -1, 0);
+const cameraUpDirection = new Vec(0.5, 1, 0, 0);
+const dimu = 300;
+const dimv = 300;
+const spheresXY = [[0, 0], [-0.2, -0.2], [0.2, 0], [-0.4, -0.4], [0.4, 0], [-0.6, -0.6], [0.6, 0]];
+const getSphereFromUserSettings = (userSettings, { centerX, centerY }) => new HM(new Sphere({
+    center: new Vec(centerX, centerY, -sphereDistance, 0),
+    radius: userSettings.radius
+}), new NormalMaterial());
+const getSceneObjectsFromUserSettings = (userSettings) => spheresXY.map((sphereXY) => getSphereFromUserSettings(userSettings, {
+    centerX: sphereXY[0],
+    centerY: sphereXY[1]
+}));
+const getSceneFromUserSettings = (userSettings) => ({
+    dimu: dimu,
+    dimv: dimv,
+    camera: new Ray(cameraOrigin, cameraDirection),
+    viewportDistance: viewportDistance,
+    cameraUpDirection: cameraUpDirection,
+    objects: getSceneObjectsFromUserSettings(userSettings)
 });
-// drawing canvas
+// setup drawing canvas and get its context 'ctx'
 const canvas = document.getElementById('canvas');
-canvas.width = getScene(userSettings).dimu;
-canvas.height = getScene(userSettings).dimv;
+canvas.width = getSceneFromUserSettings(userSettings).dimu;
+canvas.height = getSceneFromUserSettings(userSettings).dimv;
 const ctx = canvas.getContext('2d');
 // do the thing
-const drawScene = () => draw(ctx, getScene(userSettings), userSettings);
+const drawScene = () => draw(ctx, getSceneFromUserSettings(userSettings), userSettings);
 setupSettingsGui(userSettings, drawScene);
 drawScene();
 }()}
-  Pax.files["c:/btsync/sg/rayweekend/ray.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs.deps = {}; file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs.filename = "c:/btsync/sg/rayweekend/ray.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/normalMaterial.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cnormalMaterial$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cnormalMaterial$2ejs.deps = {"./vec":file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_C$3a$5cbtsync$5csg$5crayweekend$5cnormalMaterial$2ejs.filename = "C:/btsync/sg/rayweekend/normalMaterial.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cnormalMaterial$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+Object.defineProperty(exports, '__esModule', {value: true})
+with (function() {
+  const __module0 = require._esModule('./vec')
+  return Object.freeze(Object.create(null, {
+    [Symbol.toStringTag]: {value: 'ModuleImports'},
+    Vec: {get() {return __module0.Vec}, enumerable: true},
+  }))
+}()) ~function() {
+'use strict';
+Object.defineProperties(exports, {
+  NormalMaterial: {get() {return NormalMaterial}, enumerable: true},
+});
+
+     ;
+ class NormalMaterial {
+    getColor(hitInfo, scene) {
+        return new Vec(hitInfo.hitPointNormal.x + 1, hitInfo.hitPointNormal.y + 1, hitInfo.hitPointNormal.z + 1, 0)
+            .scale(0.5);
+    }
+}
+}()}
+  Pax.files["C:/btsync/sg/rayweekend/ray.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs.deps = {}; file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs.filename = "C:/btsync/sg/rayweekend/ray.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
 ~function() {
 'use strict';
@@ -280,7 +354,7 @@ Object.defineProperties(exports, {
     }
 }
 }()}
-  Pax.files["c:/btsync/sg/rayweekend/setupSettingsGui.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs.deps = {}; file_c$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs.filename = "c:/btsync/sg/rayweekend/setupSettingsGui.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/setupSettingsGui.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs.deps = {}; file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs.filename = "C:/btsync/sg/rayweekend/setupSettingsGui.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
 ~function() {
 'use strict';
@@ -301,16 +375,24 @@ Object.defineProperties(exports, {
     }
 }
 }()}
-  Pax.files["c:/btsync/sg/rayweekend/sphere.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs.deps = {}; file_c$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs.filename = "c:/btsync/sg/rayweekend/sphere.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/sphere.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs.deps = {"./hitable":file_C$3a$5cbtsync$5csg$5crayweekend$5chitable$2ejs}; file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs.filename = "C:/btsync/sg/rayweekend/sphere.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
-~function() {
+with (function() {
+  const __module0 = require._esModule('./hitable')
+  return Object.freeze(Object.create(null, {
+    [Symbol.toStringTag]: {value: 'ModuleImports'},
+    Hitable: {get() {return __module0.Hitable}, enumerable: true},
+  }))
+}()) ~function() {
 'use strict';
 Object.defineProperties(exports, {
   Sphere: {get() {return Sphere}, enumerable: true},
 });
 
- class Sphere {
-    constructor(center, radius) {
+     ;
+ class Sphere extends Hitable {
+    constructor({ center, radius }) {
+        super();
         this._center = center;
         this._radius = radius;
     }
@@ -337,7 +419,8 @@ Object.defineProperties(exports, {
         return {
             hitParam,
             hitPoint,
-            hitPointNormal
+            hitPointNormal,
+            hm: this.hm
         };
     }
     hitByRayParam(ray) {
@@ -346,13 +429,15 @@ Object.defineProperties(exports, {
         const a = ray.direction.dot(ray.direction);
         const b = 2 * oc.dot(ray.direction);
         const c = oc.dot(oc) - this.radius * this.radius;
-        const disc = b * b - 4 * a * c;
+        const disc = (b * b) - (4 * a * c);
         if (disc >= 0) {
-            const x1 = (-b - Math.sqrt(disc)) / (2 * a);
+            const bover2a = -b / 2 * a;
+            const diff = Math.sqrt(disc) / 2 * a;
+            const x1 = bover2a - diff;
             if (x1 > 0) {
                 return x1;
             }
-            const x2 = (-b + Math.sqrt(disc)) / (2 * a);
+            const x2 = bover2a + diff;
             if (x2 > 0) {
                 return x2;
             }
@@ -361,7 +446,7 @@ Object.defineProperties(exports, {
     }
 }
 }()}
-  Pax.files["c:/btsync/sg/rayweekend/vec.js"] = file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs; file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs.deps = {}; file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs.filename = "c:/btsync/sg/rayweekend/vec.js"; function file_c$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/vec.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs.deps = {}; file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs.filename = "C:/btsync/sg/rayweekend/vec.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
 ~function() {
 'use strict';
@@ -375,6 +460,11 @@ Object.defineProperties(exports, {
         this._y = y;
         this._z = z;
         this._w = w;
+    }
+    static average(vectors) {
+        return vectors
+            .reduce((s, c) => s.add(c), new Vec(0, 0, 0, 0))
+            .scale(1 / vectors.length);
     }
     get x() {
         return this._x;
@@ -472,7 +562,7 @@ Object.defineProperties(exports, {
     }
 }
 }()}
-  Pax.main = file_c$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; Pax.makeRequire(null)()
+  Pax.main = file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; Pax.makeRequire(null)()
   if (typeof module !== 'undefined') module.exports = Pax.main.module && Pax.main.module.exports
 }(typeof global !== "undefined" ? global : typeof window !== "undefined" ? window : this)
 //# sourceMappingURL=output.js.map

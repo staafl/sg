@@ -1,8 +1,12 @@
 // %USER_BACK%\btsync\books\cg\Ray Tracing in a Weekend.pdf
 
-// the meat of the thing is in draw.ts, functions draw and getColor
+// the meat of the thing is in draw.ts, draw() and getColor(), as well
+// as the hitByRay() method of the Hitable subclasses
 
+import { DiffuseMaterial } from './diffuseMaterial';
+import { NormalMaterial } from './normalMaterial';
 import { Scene, UserSettings } from './types';
+import { HM } from './hm';
 import { Ray } from './ray';
 import { Vec } from './vec';
 import { draw } from './draw';
@@ -19,47 +23,90 @@ const userSettings: UserSettings = {
 };
 
 
-// scene
+// getSceneFromUserSettings() :: UserSettings => Scene
 
 const sphereDistance = 10;
-const fov = 10;
+const viewportDistance = 10;
+const cameraOrigin = new Vec(0, 0, 0, 0);
+const cameraDirection = new Vec(0, 0, -1, 0);
+const cameraUpDirection = new Vec(0.5, 1, 0, 0);
+const dimu = 300;
+const dimv = 300;
+const spheresXY = [[0, 0], [-0.2, -0.2], [0.2, 0], [-0.4, -0.4], [0.4, 0], [-0.6, -0.6], [0.6, 0]];
 
-const getSphere = (userSettings, ox, oy) => new Sphere(
-    new Vec(0 + ox, 0 + oy, -sphereDistance, 0),
-    userSettings.radius);
+const getSphereFromUserSettings:
+    ((UserSettings, params: { centerX: number, centerY: number }) => HM) =
+    (userSettings, { centerX, centerY }) =>
+        new HM(
+            new Sphere(
+                {
+                    center: new Vec(centerX, centerY, -sphereDistance, 0),
+                    radius: userSettings.radius
+                }),
+            new NormalMaterial());
 
-const getScene: (UserSettings) => Scene =
-    userSettings => ({
-        dimu: 300, //600,
-        dimv: 300, //600,
-        camera: new Ray(new Vec(0, 0, 0, 0), new Vec(0, 0, -1, 0)),
-        fov: fov,
-        up: new Vec(0.5, 1, 0, 0),
-        objects: [
-            getSphere(userSettings, 0, 0),
-            getSphere(userSettings, -0.2, -0.2),
-            getSphere(userSettings, 0.2, 0),
-            getSphere(userSettings, -0.4, -0.4),
-            getSphere(userSettings, 0.4, 0),
-            getSphere(userSettings, -0.6, -0.6),
-            getSphere(userSettings, 0.6, 0),
-        ]
+const getSceneObjectsFromUserSettings:
+    ((UserSettings) => HM[]) =
+    (userSettings) =>
+        spheresXY.map(
+            (sphereXY) =>
+                getSphereFromUserSettings(
+                    userSettings,
+                    {
+                        centerX: sphereXY[0],
+                        centerY: sphereXY[1]
+                    }));
+
+const getSceneFromUserSettings:
+    ((UserSettings) => Scene) =
+    (userSettings) => ({
+        dimu: dimu,
+        dimv: dimv,
+        camera: new Ray(cameraOrigin, cameraDirection),
+        viewportDistance: viewportDistance,
+        cameraUpDirection: cameraUpDirection,
+        objects: getSceneObjectsFromUserSettings(userSettings)
     });
 
 
-// drawing canvas
+// setup drawing canvas and get its context 'ctx'
 
 const canvas: any = document.getElementById('canvas');
-canvas.width = getScene(userSettings).dimu;
-canvas.height = getScene(userSettings).dimv;
+
+canvas.width = getSceneFromUserSettings(userSettings).dimu;
+canvas.height = getSceneFromUserSettings(userSettings).dimv;
 
 const ctx = canvas.getContext('2d');
 
 
 // do the thing
 
-const drawScene = () => draw(ctx, getScene(userSettings), userSettings);
+const drawScene = () =>
+    draw(
+        ctx,
+        getSceneFromUserSettings(userSettings),
+        userSettings);
 
 setupSettingsGui(userSettings, drawScene);
 
 drawScene();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,56 @@
+﻿* Ray Tracing in a Weekend
+* Ray Tracing in a Weekend.pdf - Adobe Acrobat Pro DC :: Acrobat.exe
+
+----------------------------------------
+~~ things to check up on later
+----------------------------------------
+
+----------------------------------------
+~~ general linear algebra stuff
+----------------------------------------
+
+----------------------------------------
+~ dot product distributes addition
+----------------------------------------
+
+$ ? A*(B+C) = A*B + A*C $
+
+$ A*(B+C) = x_A*(x_B + x_C) + y_A*(y_B + y_C) = x_A*x_B + x_A*x_C + y_A*y_B + y_A*y_C = (x_A*x_B + y_A*y_B) + (x_A*x_C + y_A*y_C) $
+
+----------------------------------------
+~ equivalence between geometric and analytic dot product definitions
+----------------------------------------
+
+$ ? |a|*|b|*cos(a,b) = x_a*x_b + y_a*y_b $
+
+:i notes-Ray_Tracing_in_a_Weekend-dot-product
+
+OX = OA * cos AOB = OA * (AB^2 - OA^2 - OB^2) / (2 * OA * OB) = &
+
+AB^2 = (xB - xA)^2 + (yB - yA)^2
+OA^2 = xA^2 + yA^2, etc so
+
+& = ((xB - xA)^2 + (yB - yA)^2 - xA^2 - yA^2 - xB^2 - yB^2) / 2 * (xB^2 - yB^2) =
+(xAxB + yAyB) / xB^2 - yB^2 =>
+OX * OB = OA * OB * cos AOB = xAxB + yAyB
+
+----------------------------------------
+~ transformation of coordinates in rotation
+----------------------------------------
+
+:i notes-Ray_Tracing_in_a_Weekend-rotation-coordinate-transform
+
+xA' = (xA / cos α) * cos (α + γ) =
+    (xA * cos α * cos γ - xA * sin α * sin γ) / cos α =
+    (xA * cos α * cos γ - xA * sin α * sin γ) / cos α =
+    xA * cos γ - yA * sin γ
+
+yA' = (yA / sin α) * sin (α + γ) =
+    (yA * sin α * cos γ + yA * cos α * sin γ) / sin α =
+    xA * sin γ + yA * cos γ
+
+A' = A * | cos γ    sin γ |
+         | -sin γ   cos γ |
+
+
+

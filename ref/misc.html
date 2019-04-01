@@ -1,0 +1,127 @@
+<html>
+<head>
+<meta charset='utf-8'/>
+<title>Pwiki :: misc</title>
+<style>
+.toc-anchor, .toc-anchor:visited
+{
+    color: #AAA;
+    
+    /* color: rgb(64, 155, 155); */
+}
+.heading-anchor, .heading-anchor:visited
+{
+    color: #AAA;
+}
+
+.edit-anchor.edit-anchor-top
+{
+    font-size: 15pt;
+}
+.edit-anchor, .edit-anchor:visited
+{
+    color: #AAA;
+    text-decoration: underline;
+    font-size: 10pt;
+    position: relative;
+    top: -12px;
+}
+body
+{
+    color: #AAA;
+    background: black;
+}
+a:hover
+{
+    text-decoration: underline;
+}
+a:visited
+{
+    color: #607069;
+}
+a
+{
+    color: rgb(64, 155, 155);
+    /*color: #228b22;*/
+    text-decoration: none;
+}
+h1
+{
+    font-size: 50pt;
+    margin-top: 0;
+    margin-bottom: 10;
+}
+h2
+{
+    margin-bottom: 10;
+}
+</style>
+</head>
+<body>
+<h1><a class='heading-anchor' href='misc'>misc</a></h1>
+<a class='heading-anchor edit-anchor edit-anchor-top' href='/'>Index</a>
+&nbsp;
+<a class='heading-anchor edit-anchor edit-anchor-top' href='misc?edit=1'>Edit</a>
+
+<p>Vector multiplication:</p>
+<p><a href="vecmul.html">:n vecmul</a></p>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<script>
+(function() {
+    window.history.replaceState(null, null, window.location.pathname + window.location.hash);
+})();
+</script>
+<script type='text/x-mathjax-config'>
+   MathJax.Hub.Config({
+    extensions: ['jsMath2jax.js']
+  });
+</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML'></script>
+<script>
+for (const elem of document.querySelectorAll('a'))
+{
+    const href = elem.href;
+    if (~href.indexOf('edit=1'))
+    {
+        elem.onclick = e =>
+        {
+            e.preventDefault();
+            fetch(href);
+        };
+    }
+}
+</script>
+</body>
+</html>

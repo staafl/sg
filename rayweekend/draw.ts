@@ -8,25 +8,29 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
 
     clearCanvas(ctx, scene.dimu, scene.dimv);
 
-    const origin = scene.camera.origin;
-    const dir = scene.camera.direction.normalize();
-    const up = scene.up.normalize();
+    const cameraPosition = scene.camera.origin;
+    const cameraDir = scene.camera.direction.normalize();
+    const cameraUpDir = scene.cameraUpDirection.normalize();
 
-    const viewportRight = dir.cross(up).normalize();
-    const viewportCenter = origin.add(dir.scale(scene.fov));
+    const viewportRightDir = cameraDir.cross(cameraUpDir).normalize();
+    const viewportCenter = cameraPosition.add(cameraDir.scale(scene.viewportDistance));
 
     // upper left corner of the viewport in world coordinate system
     const upperLeft = viewportCenter.add(
-        viewportRight.neg(),
-        up);
+        viewportRightDir.neg(),
+        cameraUpDir);
 
+    // vectors used to trace out pixels on the viewport;
     // such that upperLeft + vvec + vvec = new Vec(-upperLeft.x, -upperLeft.y, upperLeft.z),
     // i.e. the right lower corner
-    const uvec = viewportCenter.add(viewportRight.scale(userSettings.uvecX)).setZ(0);
-    const vvec = viewportCenter.add(up.scale(userSettings.vvecY).neg()).setZ(0);
+    const uvec = viewportCenter.add(viewportRightDir.scale(userSettings.uvecX)).setZ(0);
+    const vvec = viewportCenter.add(cameraUpDir.scale(userSettings.vvecY).neg()).setZ(0);
 
-    console.log({ upperLeft, uvec, vvec, viewportRight, viewportCenter });
+    console.log(
+        "Viewport calculations",
+        { upperLeft, uvec, vvec, viewportRightDir, viewportCenter });
 
+    // the actual ray casting happens here
     const samples = 4;
     const samplesRoot = Math.sqrt(samples);
     for (let u = 0; u < scene.dimu; u += 1) {
@@ -43,14 +47,15 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
                         // create a ray from the camera to the pixel
 
                         const tracedRay = new Ray(
-                            origin,
+                            cameraPosition,
                             upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
 
                         const color = getColor(scene, tracedRay);
                         colors.push(color);
                     }
                 }
-                const averageColor = colors.reduce((s, c) => s.add(c), new Vec(0,0,0,0)).scale(1 / colors.length);
+
+                const averageColor = Vec.average(colors);
                 drawPixel(ctx, u, v, averageColor);
             }
         },
@@ -62,26 +67,28 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
 
 
 function getColor(scene: Scene, tracedRay: Ray): Vec {
-    const origin = scene.camera.origin;
+    const cameraPosition = scene.camera.origin;
     let closestHit: HitInfo = null;
-    for (const obj of scene.objects) {
-        const hit = obj.hitByRay(tracedRay);
+    let closestHitDistance: number = undefined;
+    for (const hm of scene.objects) {
+        const hit = hm.hitable.hitByRay(tracedRay);
 
         if (hit) {
-                if (!closestHit ||
-                    closestHit.hitPoint.sub(origin).length > hit.hitPoint.sub(origin).length) {
+                let thisHitDistance;
+
+                if (closestHitDistance === undefined ||
+                    closestHitDistance >
+                        (thisHitDistance = hit.hitPoint.sub(cameraPosition).length)) {
                 closestHit = hit;
+                closestHitDistance = thisHitDistance;
             }
         }
     }
 
     if (closestHit) {
-
-        return new Vec(
-                closestHit.hitPointNormal.x + 1,
-                closestHit.hitPointNormal.y + 1,
-                closestHit.hitPointNormal.z + 1, 0)
-            .scale(0.5);
+        return closestHit.hm.material.getColor(
+            closestHit,
+            scene);
     }
 
     // background: hyperbolic gradient
@@ -104,8 +111,8 @@ function getColor(scene: Scene, tracedRay: Ray): Vec {
     //
     // among rays with x=0, the highest normalized y is the one hitting at the highest v, so
     // the brightest place is the top center; analogously, the dimmest place is the bottom center
-    const unitDirection = tracedRay.direction.normalize();
-    const t = 0.5*(unitDirection.y + 1);
+    const unitDir = tracedRay.direction.normalize();
+    const t = 0.5*(unitDir.y + 1);
     const color = new Vec(0, 0, 0, 0).interpolate(new Vec(1, 1, 1, 0), t);
     return color;
 

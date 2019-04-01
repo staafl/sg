@@ -1,0 +1,169 @@
+<html>
+<head>
+<meta charset='utf-8'/>
+<title>Pwiki :: notes-Ray_Tracing_in_a_Weekend</title>
+<style>
+.toc-anchor, .toc-anchor:visited
+{
+    color: #AAA;
+    
+    /* color: rgb(64, 155, 155); */
+}
+.heading-anchor, .heading-anchor:visited
+{
+    color: #AAA;
+}
+
+.edit-anchor.edit-anchor-top
+{
+    font-size: 15pt;
+}
+.edit-anchor, .edit-anchor:visited
+{
+    color: #AAA;
+    text-decoration: underline;
+    font-size: 10pt;
+    position: relative;
+    top: -12px;
+}
+body
+{
+    color: #AAA;
+    background: black;
+}
+a:hover
+{
+    text-decoration: underline;
+}
+a:visited
+{
+    color: #607069;
+}
+a
+{
+    color: rgb(64, 155, 155);
+    /*color: #228b22;*/
+    text-decoration: none;
+}
+h1
+{
+    font-size: 50pt;
+    margin-top: 0;
+    margin-bottom: 10;
+}
+h2
+{
+    margin-bottom: 10;
+}
+</style>
+</head>
+<body>
+<h1><a class='heading-anchor' href='notes-Ray_Tracing_in_a_Weekend'>notes-Ray_Tracing_in_a_Weekend</a></h1>
+<a class='heading-anchor edit-anchor edit-anchor-top' href='/'>Index</a>
+&nbsp;
+<a class='heading-anchor edit-anchor edit-anchor-top' href='notes-Ray_Tracing_in_a_Weekend?edit=1'>Edit</a>
+<h2><a class='heading-anchor' href='notes-Ray_Tracing_in_a_Weekend'>Table of Contents</a></h2><a class='toc-anchor' href='#~~-things-to-check-up-on-later'>~~ things to check up on later</a><br><a class='toc-anchor' href='#~~-general-linear-algebra-stuff'>~~ general linear algebra stuff</a><br><a class='toc-anchor' href='#~-dot-product-distributes-addition'>~ dot product distributes addition</a><br><a class='toc-anchor' href='#~-equivalence-between-geometric-and-analytic-dot-product-definitions'>~ equivalence between geometric and analytic dot product definitions</a><br><a class='toc-anchor' href='#~-transformation-of-coordinates-in-rotation'>~ transformation of coordinates in rotation</a><br><br/>
+<ul>
+<li>Ray Tracing in a Weekend</li>
+<li>Ray Tracing in a Weekend.pdf - Adobe Acrobat Pro DC :: Acrobat.exe</li>
+</ul>
+<hr />
+<div id='~~-things-to-check-up-on-later'></div>
+<h2 id="things-to-check-up-on-later"><a class='heading-anchor' href='notes-Ray_Tracing_in_a_Weekend#~~-things-to-check-up-on-later'>~~ things to check up on later</a></h2>
+<p><a class='edit-anchor' href='notes-Ray_Tracing_in_a_Weekend'>Top</a> <a class='edit-anchor' href='notes-Ray_Tracing_in_a_Weekend?edit=1&where=~~ things to check up on later'>Edit</a></p>
+<hr />
+<div id='~~-general-linear-algebra-stuff'></div>
+<h2 id="general-linear-algebra-stuff"><a class='heading-anchor' href='notes-Ray_Tracing_in_a_Weekend#~~-general-linear-algebra-stuff'>~~ general linear algebra stuff</a></h2>
+<p><a class='edit-anchor' href='notes-Ray_Tracing_in_a_Weekend'>Top</a> <a class='edit-anchor' href='notes-Ray_Tracing_in_a_Weekend?edit=1&where=~~ general linear algebra stuff'>Edit</a></p>
+<hr />
+<div id='~-dot-product-distributes-addition'></div>
+<h2 id="dot-product-distributes-addition"><a class='heading-anchor' href='notes-Ray_Tracing_in_a_Weekend#~-dot-product-distributes-addition'>~ dot product distributes addition</a></h2>
+<p><a class='edit-anchor' href='notes-Ray_Tracing_in_a_Weekend'>Top</a> <a class='edit-anchor' href='notes-Ray_Tracing_in_a_Weekend?edit=1&where=~ dot product distributes addition'>Edit</a></p>
+<p><span class="math">? A*(B+C) = A*B + A*C</span></p>
+<p><span class="math">A*(B+C) = x_A*(x_B + x_C) + y_A*(y_B + y_C) = x_A*x_B + x_A*x_C + y_A*y_B + y_A*y_C = (x_A*x_B + y_A*y_B) + (x_A*x_C + y_A*y_C)</span></p>
+<hr />
+<div id='~-equivalence-between-geometric-and-analytic-dot-product-definitions'></div>
+<h2 id="equivalence-between-geometric-and-analytic-dot-product-definitions"><a class='heading-anchor' href='notes-Ray_Tracing_in_a_Weekend#~-equivalence-between-geometric-and-analytic-dot-product-definitions'>~ equivalence between geometric and analytic dot product definitions</a></h2>
+<p><a class='edit-anchor' href='notes-Ray_Tracing_in_a_Weekend'>Top</a> <a class='edit-anchor' href='notes-Ray_Tracing_in_a_Weekend?edit=1&where=~ equivalence between geometric and analytic dot product definitions'>Edit</a></p>
+<p><span class="math">? |a|*|b|*cos(a,b) = x_a*x_b + y_a*y_b</span></p>
+<img src='images/notes-Ray_Tracing_in_a_Weekend-dot-product.png' width='600' />
+<p>OX = OA * cos AOB = OA * (AB<sup>2 - OA</sup>2 - OB^2) / (2 * OA * OB) = &amp;</p>
+<p>AB<sup>2 = (xB - xA)<sup>2 + (yB - yA)<sup>2
+OA</sup>2 = xA</sup>2 + yA</sup>2, etc so</p>
+<p>&amp; = ((xB - xA)<sup>2 + (yB - yA)<sup>2 - xA</sup>2 - yA</sup>2 - xB<sup>2 - yB</sup>2) / 2 * (xB<sup>2 - yB</sup>2) =
+(xAxB + yAyB) / xB<sup>2 - yB</sup>2 =&gt;
+OX * OB = OA * OB * cos AOB = xAxB + yAyB</p>
+<hr />
+<div id='~-transformation-of-coordinates-in-rotation'></div>
+<h2 id="transformation-of-coordinates-in-rotation"><a class='heading-anchor' href='notes-Ray_Tracing_in_a_Weekend#~-transformation-of-coordinates-in-rotation'>~ transformation of coordinates in rotation</a></h2>
+<p><a class='edit-anchor' href='notes-Ray_Tracing_in_a_Weekend'>Top</a> <a class='edit-anchor' href='notes-Ray_Tracing_in_a_Weekend?edit=1&where=~ transformation of coordinates in rotation'>Edit</a></p>
+<img src='images/notes-Ray_Tracing_in_a_Weekend-rotation-coordinate-transform.png' width='600' />
+<p>xA' = (xA / cos α) * cos (α + γ) =
+(xA * cos α * cos γ - xA * sin α * sin γ) / cos α =
+(xA * cos α * cos γ - xA * sin α * sin γ) / cos α =
+xA * cos γ - yA * sin γ</p>
+<p>yA' = (yA / sin α) * sin (α + γ) =
+(yA * sin α * cos γ + yA * cos α * sin γ) / sin α =
+xA * sin γ + yA * cos γ</p>
+<p>A' = A * | cos γ    sin γ |
+| -sin γ   cos γ |</p>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<script>
+(function() {
+    window.history.replaceState(null, null, window.location.pathname + window.location.hash);
+})();
+</script>
+<script type='text/x-mathjax-config'>
+   MathJax.Hub.Config({
+    extensions: ['jsMath2jax.js']
+  });
+</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML'></script>
+<script>
+for (const elem of document.querySelectorAll('a'))
+{
+    const href = elem.href;
+    if (~href.indexOf('edit=1'))
+    {
+        elem.onclick = e =>
+        {
+            e.preventDefault();
+            fetch(href);
+        };
+    }
+}
+</script>
+</body>
+</html>
