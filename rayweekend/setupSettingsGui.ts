@@ -17,6 +17,6 @@ export function setupSettingsGui(userSettings: UserSettings, onChange: () => voi
             .step(step)
             .name(userSetting.name || key);
 
-        newSetting.onFinishChange(x => onChange);
+        newSetting.onFinishChange(onChange);
     }
 }

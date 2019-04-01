@@ -63,8 +63,8 @@ export class Sphere extends Hitable
         const c = oc.dot(oc) - this.radius * this.radius;
         const disc = (b * b) - (4 * a * c);
         if (disc >= 0) {
-            const bover2a = -b / 2*a;
-            const diff = Math.sqrt(disc) / 2*a;
+            const bover2a = -b / (2*a);
+            const diff = Math.sqrt(disc) / (2*a);
             const x1 = bover2a - diff;
 
             if (x1 > 0) {

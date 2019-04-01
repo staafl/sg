@@ -33,16 +33,16 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
     // the actual ray casting happens here
     const samples = 4;
     const samplesRoot = Math.sqrt(samples);
-    for (let u = 0; u < scene.dimu; u += 1) {
+    for (let uu = 0; uu < scene.dimu; uu += 1) {
         setTimeout(function() {
-            for (let v = 0; v < scene.dimv; v += 1) {
+            for (let vv = 0; vv < scene.dimv; vv += 1) {
                 const colors = [];
                 for (let us = 0; us < samplesRoot; ++us) {
                     for (let vs = 0; vs < samplesRoot; ++vs) {
-                        // for each (u, v) pixel in the viewport
+                        // for each (uu, vv) pixel in the viewport
 
-                        const ur = (u + us/samplesRoot) / scene.dimu; // [0;1)
-                        const vr = (v + vs/samplesRoot) / scene.dimv; // [0;1)
+                        const ur = (uu + us/samplesRoot) / scene.dimu; // [0;1)
+                        const vr = (vv + vs/samplesRoot) / scene.dimv; // [0;1)
 
                         // create a ray from the camera to the pixel
 
@@ -56,7 +56,7 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
                 }
 
                 const averageColor = Vec.average(colors);
-                drawPixel(ctx, u, v, averageColor);
+                drawPixel(ctx, uu, vv, averageColor);
             }
         },
         1);
@@ -70,18 +70,20 @@ function getColor(scene: Scene, tracedRay: Ray): Vec {
     const cameraPosition = scene.camera.origin;
     let closestHit: HitInfo = null;
     let closestHitDistance: number = undefined;
+
     for (const hm of scene.objects) {
-        const hit = hm.hitable.hitByRay(tracedRay);
+        const thisHit = hm.hitable.hitByRay(tracedRay);
 
-        if (hit) {
-                let thisHitDistance;
+        if (!thisHit) {
+            continue;
+        }
 
-                if (closestHitDistance === undefined ||
-                    closestHitDistance >
-                        (thisHitDistance = hit.hitPoint.sub(cameraPosition).length)) {
-                closestHit = hit;
-                closestHitDistance = thisHitDistance;
-            }
+        const thisHitDistance = thisHit.hitPoint.sub(cameraPosition).length;
+
+        if (closestHitDistance === undefined ||
+            closestHitDistance > thisHitDistance) {
+            closestHit = thisHit;
+            closestHitDistance = thisHitDistance;
         }
     }
 
@@ -92,16 +94,16 @@ function getColor(scene: Scene, tracedRay: Ray): Vec {
     }
 
     // background: hyperbolic gradient
-    // among all rays that hit the viewport at a given v', the one with the highest
+    // among all rays that hit the viewport at a given vv', the one with the highest
     // normalized abs(y) is the one with x = 0 (the one going directly towards the viewport)
-    // all vectors from the origin have the same non-normalized y (=v'), divided by a length
-    // >= sqrt(v'^2 + z^2), with equality only when x = 0
+    // all vectors from the origin have the same non-normalized y (=vv'), divided by a length
+    // >= sqrt(vv'^2 + z^2), with equality only when x = 0
     //
     // imagine a cone with a vertex at the origin (i.e. rays with a given 'y') intersecting a
     // plane (the viewport plane) - you get a hyperbola
     //
-    // v' = y/sqrt(x^2 + y^2 + z'^2) (z' and v' are parameters)
-    // v'^2*z'^2 = y^2*(1-v'^2) - x^2 (which is a hyperbolic formula)
+    // vv' = y/sqrt(x^2 + y^2 + z'^2) (z' and vv' are parameters)
+    // vv'^2*z'^2 = y^2*(1-vv'^2) - x^2 (which is a hyperbolic formula)
     // y = +/- sqrt(param + x^2)/param => y has maximum abs when x = 0
     //
     // this is why the resulting gradient is dimmest in the middle and gets brighter at the sides
@@ -109,7 +111,7 @@ function getColor(scene: Scene, tracedRay: Ray): Vec {
     // - points with equal lumosity are on a hyperbola with vertex in the vertical midline
     // of the viewport
     //
-    // among rays with x=0, the highest normalized y is the one hitting at the highest v, so
+    // among rays with x=0, the highest normalized y is the one hitting at the highest vv, so
     // the brightest place is the top center; analogously, the dimmest place is the bottom center
     const unitDir = tracedRay.direction.normalize();
     const t = 0.5*(unitDir.y + 1);
