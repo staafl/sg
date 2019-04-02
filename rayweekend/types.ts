@@ -2,6 +2,11 @@ import { HM } from './hm';
 import { Ray } from './ray';
 import { Vec } from './vec';
 
+export interface Background
+{
+    getColor(scene: Scene, tracedRay: Ray, userSettings: UserSettings);
+}
+
 export interface HitInfo
 {
     // distance along the ray measured as scaling factor of 'ray.direction'
@@ -23,7 +28,8 @@ export interface Scene
     objects: HM[],
     camera: Ray,
     viewportDistance: number,
-    cameraUpDirection: Vec
+    cameraUpDirection: Vec,
+    background: Background
 }
 
 // u/v - uniform coordinate system of the viewport
@@ -34,5 +40,6 @@ export interface UserSettings
 {
     uvecX: any,
     vvecY: any,
-    radius: any
+    radius: any,
+    quality: any
 }

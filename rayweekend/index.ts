@@ -1,8 +1,11 @@
 // %USER_BACK%\btsync\books\cg\Ray Tracing in a Weekend.pdf
 
-// the meat of the thing is in draw.ts, draw() and getColor(), as well
-// as the hitByRay() method of the Hitable subclasses
+// interesting places:
+// - draw.ts, draw(Context, Scene, UserSettings) and getColor(Scene, Ray)
+// - Hitable subclasses, hitByRay(Ray)
+// - Material subclasses, getColor(HitInfo
 
+import { HyperbolicBackground } from './hyperbolicBackground';
 import { DiffuseMaterial } from './diffuseMaterial';
 import { NormalMaterial } from './normalMaterial';
 import { Scene, UserSettings } from './types';
@@ -20,6 +23,7 @@ const userSettings: UserSettings = {
     uvecX: { name: "X", initial: 2, min: -4, max: 4, step: 0.1 },
     vvecY: { name: "Y", initial: 2, min: -2, max: 2, step: 0.1 },
     radius: { name: "radius", initial: 0.2, min: 0, max: 4, step: 0.1 },
+    quality: { name: "quality", initial: 100, min: 1, max: 100, step: 1 }
 };
 
 
@@ -65,7 +69,8 @@ const getSceneFromUserSettings:
         camera: new Ray(cameraOrigin, cameraDirection),
         viewportDistance: viewportDistance,
         cameraUpDirection: cameraUpDirection,
-        objects: getSceneObjectsFromUserSettings(userSettings)
+        objects: getSceneObjectsFromUserSettings(userSettings),
+        background: new HyperbolicBackground()
     });
 
 

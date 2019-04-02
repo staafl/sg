@@ -7,7 +7,12 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
     const started = new Date().getTime();
 
     clearCanvas(ctx, scene.dimu, scene.dimv);
+    
+    const step = Math.floor(100 / (userSettings.quality || 100));
 
+    // prepare to cast rays; each ray will produce the color of 1 pixel
+    // (or an QxQ square of pixels where Q = step)
+    // first, figure out the viewport
     const cameraPosition = scene.camera.origin;
     const cameraDir = scene.camera.direction.normalize();
     const cameraUpDir = scene.cameraUpDirection.normalize();
@@ -33,9 +38,9 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
     // the actual ray casting happens here
     const samples = 4;
     const samplesRoot = Math.sqrt(samples);
-    for (let uu = 0; uu < scene.dimu; uu += 1) {
+    for (let uu = 0; uu < scene.dimu; uu += step) {
         setTimeout(function() {
-            for (let vv = 0; vv < scene.dimv; vv += 1) {
+            for (let vv = 0; vv < scene.dimv; vv += step) {
                 const colors = [];
                 for (let us = 0; us < samplesRoot; ++us) {
                     for (let vs = 0; vs < samplesRoot; ++vs) {
@@ -50,13 +55,13 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
                             cameraPosition,
                             upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
 
-                        const color = getColor(scene, tracedRay);
+                        const color = getColor(scene, tracedRay, userSettings);
                         colors.push(color);
                     }
                 }
 
                 const averageColor = Vec.average(colors);
-                drawPixel(ctx, uu, vv, averageColor);
+                drawPixel(ctx, uu, vv, averageColor, step);
             }
         },
         1);
@@ -66,7 +71,7 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
 }
 
 
-function getColor(scene: Scene, tracedRay: Ray): Vec {
+function getColor(scene: Scene, tracedRay: Ray, userSettings: UserSettings): Vec {
     const cameraPosition = scene.camera.origin;
     let closestHit: HitInfo = null;
     let closestHitDistance: number = undefined;
@@ -92,48 +97,12 @@ function getColor(scene: Scene, tracedRay: Ray): Vec {
             closestHit,
             scene);
     }
+    
+    if (scene.background) {
+        return scene.background.getColor(scene, tracedRay, userSettings);
+    }
 
-    // background: hyperbolic gradient
-    // among all rays that hit the viewport at a given vv', the one with the highest
-    // normalized abs(y) is the one with x = 0 (the one going directly towards the viewport)
-    // all vectors from the origin have the same non-normalized y (=vv'), divided by a length
-    // >= sqrt(vv'^2 + z^2), with equality only when x = 0
-    //
-    // imagine a cone with a vertex at the origin (i.e. rays with a given 'y') intersecting a
-    // plane (the viewport plane) - you get a hyperbola
-    //
-    // vv' = y/sqrt(x^2 + y^2 + z'^2) (z' and vv' are parameters)
-    // vv'^2*z'^2 = y^2*(1-vv'^2) - x^2 (which is a hyperbolic formula)
-    // y = +/- sqrt(param + x^2)/param => y has maximum abs when x = 0
-    //
-    // this is why the resulting gradient is dimmest in the middle and gets brighter at the sides
-    // (bottom half), or is brightest in the middle and dims towards the sides (top half)
-    // - points with equal lumosity are on a hyperbola with vertex in the vertical midline
-    // of the viewport
-    //
-    // among rays with x=0, the highest normalized y is the one hitting at the highest vv, so
-    // the brightest place is the top center; analogously, the dimmest place is the bottom center
-    const unitDir = tracedRay.direction.normalize();
-    const t = 0.5*(unitDir.y + 1);
-    const color = new Vec(0, 0, 0, 0).interpolate(new Vec(1, 1, 1, 0), t);
-    return color;
-
-
-//    another way to get increasingly rapid change of value away from the midline
-//    (square (x - k))*sgn(x - k) + k from 0 to 2k
-
-//    you can draw hyperbolic strips of approximately equal brightness
-//    using the below
-//    if (color.r > 0.3 && color.r < 0.31) {
-//        return new Vec(1, 0, 0);
-//    } else if (color.r > 0.7 && color.r < 0.71) {
-//        return new Vec(0, 1, 0);
-//    } else if (color.r > 0.49 && color.r < 0.51) {
-//        return new Vec(1, 1, 1);
-//    } else if (color.r > 0.8 && color.r < 0.81) {
-//        return new Vec(0, 0, 1);
-//    }
-//    return new Vec();
+    return new Vec(0, 0, 0, 0);
 }
 
 function clearCanvas(ctx, dimu, dimv) {
@@ -142,7 +111,7 @@ function clearCanvas(ctx, dimu, dimv) {
     ctx.fillRect(0, 0, dimu, dimv);
 }
 
-function drawPixel(ctx, x, y, color) {
+function drawPixel(ctx, x, y, color, step) {
     // ((x + y) / 256) * (256 - 255.99) > y
     // (x + y) * 0.01/256 > y
     // x > 255.99y
@@ -161,5 +130,5 @@ function drawPixel(ctx, x, y, color) {
     //if (x % 10 === 0 && y % 10 === 0) {
     //    console.log(JSON.stringify({ x, y, fill }));
     //}
-    ctx.fillRect(x, y, 1, 1);
+    ctx.fillRect(x, y, step, step);
 }
