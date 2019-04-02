@@ -79,7 +79,6 @@ Object.defineProperties(exports, {
  function draw(ctx, scene, userSettings) {
     const started = new Date().getTime();
     clearCanvas(ctx, scene.dimu, scene.dimv);
-    const step = Math.floor(100 / (userSettings.quality || 100));
     // prepare to cast rays; each ray will produce the color of 1 pixel
     // (or an QxQ square of pixels where Q = step)
     // first, figure out the viewport
@@ -97,7 +96,8 @@ Object.defineProperties(exports, {
     const vvec = viewportCenter.add(cameraUpDir.scale(userSettings.vvecY).neg()).setZ(0);
     console.log("Viewport calculations", { upperLeft, uvec, vvec, viewportRightDir, viewportCenter });
     // the actual ray casting happens here
-    const samples = 4;
+    const step = userSettings.pixelStep;
+    const samples = userSettings.antialisingSamples;
     const samplesRoot = Math.sqrt(samples);
     for (let uu = 0; uu < scene.dimu; uu += step) {
         setTimeout(function () {
@@ -106,8 +106,8 @@ Object.defineProperties(exports, {
                 for (let us = 0; us < samplesRoot; ++us) {
                     for (let vs = 0; vs < samplesRoot; ++vs) {
                         // for each (uu, vv) pixel in the viewport
-                        const ur = (uu + us / samplesRoot) / scene.dimu; // [0;1)
-                        const vr = (vv + vs / samplesRoot) / scene.dimv; // [0;1)
+                        const ur = (uu + (step / 2) + us / samplesRoot) / scene.dimu; // [0;1)
+                        const vr = (vv + (step / 2) + vs / samplesRoot) / scene.dimv; // [0;1)
                         // create a ray from the camera to the pixel
                         const tracedRay = new Ray(cameraPosition, upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
                         const color = getColor(scene, tracedRay, userSettings);
@@ -266,7 +266,7 @@ Object.defineProperties(exports, {
     }
 }
 }()}
-  Pax.files["C:/btsync/sg/rayweekend/index.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.deps = {"./normalMaterial":file_C$3a$5cbtsync$5csg$5crayweekend$5cnormalMaterial$2ejs,"./draw":file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs,"./hyperbolicBackground":file_C$3a$5cbtsync$5csg$5crayweekend$5chyperbolicBackground$2ejs,"./setupSettingsGui":file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs,"./sphere":file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs,"./hm":file_C$3a$5cbtsync$5csg$5crayweekend$5chm$2ejs,"./ray":file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs,"./vec":file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.filename = "C:/btsync/sg/rayweekend/index.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
+  Pax.files["C:/btsync/sg/rayweekend/index.js"] = file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs; file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.deps = {"./draw":file_C$3a$5cbtsync$5csg$5crayweekend$5cdraw$2ejs,"./normalMaterial":file_C$3a$5cbtsync$5csg$5crayweekend$5cnormalMaterial$2ejs,"./hyperbolicBackground":file_C$3a$5cbtsync$5csg$5crayweekend$5chyperbolicBackground$2ejs,"./setupSettingsGui":file_C$3a$5cbtsync$5csg$5crayweekend$5csetupSettingsGui$2ejs,"./sphere":file_C$3a$5cbtsync$5csg$5crayweekend$5csphere$2ejs,"./hm":file_C$3a$5cbtsync$5csg$5crayweekend$5chm$2ejs,"./ray":file_C$3a$5cbtsync$5csg$5crayweekend$5cray$2ejs,"./vec":file_C$3a$5cbtsync$5csg$5crayweekend$5cvec$2ejs}; file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs.filename = "C:/btsync/sg/rayweekend/index.js"; function file_C$3a$5cbtsync$5csg$5crayweekend$5cindex$2ejs(module, exports, require, __filename, __dirname, __import_meta) {
 Object.defineProperty(exports, '__esModule', {value: true})
 with (function() {
   const __module0 = require._esModule('./hyperbolicBackground')
@@ -309,7 +309,8 @@ const userSettings = {
     uvecX: { name: "X", initial: 2, min: -4, max: 4, step: 0.1 },
     vvecY: { name: "Y", initial: 2, min: -2, max: 2, step: 0.1 },
     radius: { name: "radius", initial: 0.2, min: 0, max: 4, step: 0.1 },
-    quality: { name: "quality", initial: 100, min: 1, max: 100, step: 1 }
+    pixelStep: { name: "pixel step", initial: 1, min: 1, max: 20, step: 1 },
+    antialisingSamples: { name: "antialising samples", initial: 4, min: 1, max: 100, step: 1 }
 };
 // getSceneFromUserSettings() :: UserSettings => Scene
 const sphereDistance = 10;
@@ -403,14 +404,22 @@ Object.defineProperties(exports, {
 
  function setupSettingsGui(userSettings, onChange) {
     const gui = new dat.GUI();
+    const userSettingsCache = {};
     for (const key of Object.keys(userSettings)) {
         const userSetting = userSettings[key];
         userSettings[key] = userSetting.initial;
+        userSettingsCache[key] = userSetting.initial;
         const step = userSetting.step || (userSetting.max - userSetting.min / 100);
-        const newSetting = gui.add(userSettings, key, userSetting.min, userSetting.max)
+        const thisSettingObject = gui.add(userSettings, key, userSetting.min, userSetting.max)
             .step(step)
             .name(userSetting.name || key);
-        newSetting.onFinishChange(onChange);
+        thisSettingObject.onFinishChange((value) => {
+            const oldValue = userSettingsCache[key];
+            if (value !== oldValue) {
+                userSettingsCache[key] = value;
+                onChange({ key, value, oldValue });
+            }
+        });
     }
 }
 }()}

@@ -33,14 +33,14 @@ export interface Scene
 }
 
 // u/v - uniform coordinate system of the viewport
-// origin is top left, u goes left to right, v - top to bottom
-// corresponds to browser's x/y, but we're using x/y/z for camera coordinate system
+// origin is top left, u goes left to right, v goes top to bottom
+// corresponds to browser's x/y, but we're using x/y/z for the world coordinate system
 
 export interface UserSettings
 {
     uvecX: any,
     vvecY: any,
     radius: any,
-    quality: any,
+    pixelStep: any,
     antialisingSamples: any
 }

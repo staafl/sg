@@ -2,14 +2,17 @@ import { UserSettings } from './types';
 
 declare const dat: any;
 
-export function setupSettingsGui(userSettings: UserSettings, onChange: () => void) {
+export function setupSettingsGui(userSettings: UserSettings, onChange: (any) => void) {
 	const gui = new dat.GUI();
+
+    const userSettingsCache = {};
 
     for (const key of Object.keys(userSettings)) {
         const userSetting = userSettings[key];
         userSettings[key] = userSetting.initial
+        userSettingsCache[key] = userSetting.initial
         const step = userSetting.step || (userSetting.max - userSetting.min / 100);
-        const newSetting = gui.add(
+        const thisSettingObject = gui.add(
             userSettings,
             key,
             userSetting.min,
@@ -17,6 +20,12 @@ export function setupSettingsGui(userSettings: UserSettings, onChange: () => voi
             .step(step)
             .name(userSetting.name || key);
 
-        newSetting.onFinishChange(onChange);
+        thisSettingObject.onFinishChange((value) => {
+            const oldValue = userSettingsCache[key];
+            if (value !== oldValue) {
+                userSettingsCache[key] = value;
+                onChange({ key, value, oldValue });
+            }
+        });
     }
 }

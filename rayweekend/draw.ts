@@ -46,8 +46,8 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
                     for (let vs = 0; vs < samplesRoot; ++vs) {
                         // for each (uu, vv) pixel in the viewport
 
-                        const ur = (uu + us/samplesRoot) / scene.dimu; // [0;1)
-                        const vr = (vv + vs/samplesRoot) / scene.dimv; // [0;1)
+                        const ur = (uu + (step / 2) + us/samplesRoot) / scene.dimu; // [0;1)
+                        const vr = (vv + (step / 2) + vs/samplesRoot) / scene.dimv; // [0;1)
 
                         // create a ray from the camera to the pixel
 
