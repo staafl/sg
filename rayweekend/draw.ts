@@ -8,7 +8,6 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
 
     clearCanvas(ctx, scene.dimu, scene.dimv);
     
-    const step = Math.floor(100 / (userSettings.quality || 100));
 
     // prepare to cast rays; each ray will produce the color of 1 pixel
     // (or an QxQ square of pixels where Q = step)
@@ -36,7 +35,8 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
         { upperLeft, uvec, vvec, viewportRightDir, viewportCenter });
 
     // the actual ray casting happens here
-    const samples = 4;
+    const step = userSettings.pixelStep;
+    const samples = userSettings.antialisingSamples;
     const samplesRoot = Math.sqrt(samples);
     for (let uu = 0; uu < scene.dimu; uu += step) {
         setTimeout(function() {

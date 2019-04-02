@@ -41,5 +41,6 @@ export interface UserSettings
     uvecX: any,
     vvecY: any,
     radius: any,
-    quality: any
+    quality: any,
+    antialisingSamples: any
 }
