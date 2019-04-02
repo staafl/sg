@@ -19,34 +19,59 @@ import { setupSettingsGui } from './setupSettingsGui';
 
 // user-editable settings
 
+const pixelStep = 20;
+const samples = 1;
+
 const userSettings: UserSettings = {
     uvecX: { name: "X", initial: 2, min: -4, max: 4, step: 0.1 },
     vvecY: { name: "Y", initial: 2, min: -2, max: 2, step: 0.1 },
     radius: { name: "radius", initial: 0.2, min: 0, max: 4, step: 0.1 },
-    pixelStep: { name: "pixel step", initial: 1, min: 1, max: 20, step: 1 },
-    antialisingSamples: { name: "antialising samples", initial: 4, min: 1, max: 100, step: 1 }
+    pixelStep: { name: "pixel step", initial: pixelStep, min: 1, max: 40, step: 1 },
+    antialisingSamples: { name: "antialising samples", initial: samples, min: 1, max: 100, step: 1 }
 };
 
 
 // getSceneFromUserSettings() :: UserSettings => Scene
 
 const sphereDistance = 10;
+
 const viewportDistance = 10;
+
 const cameraOrigin = new Vec(0, 0, 0, 0);
+
 const cameraDirection = new Vec(0, 0, -1, 0);
-const cameraUpDirection = new Vec(0.5, 1, 0, 0);
+
+const cameraUpDirection = new Vec(0, 1, 0, 0);
+
+// const cameraUpDirection = new Vec(0.5, 1, 0, 0);
+
 const dimu = 300;
+
 const dimv = 300;
-const spheresXY = [[0, 0], [-0.2, -0.2], [0.2, 0], [-0.4, -0.4], [0.4, 0], [-0.6, -0.6], [0.6, 0]];
+
+// const spheresXY = [[0, 0], [-0.2, -0.2], [0.2, 0]];//, [-0.4, -0.4], [0.4, 0], [-0.6, -0.6], [0.6, 0]];
+
+const spheresXY = [[0, 0], [0, -100, -sphereDistance + 1, 100]];
 
 const getSphereFromUserSettings:
-    ((UserSettings, params: { centerX: number, centerY: number }) => HM) =
-    (userSettings, { centerX, centerY }) =>
+    ((
+    UserSettings,
+    params:
+    {
+        id: string,
+        centerX: number,
+        centerY: number,
+        centerZ?: number,
+        radius?: number
+    })
+    => HM) =
+    (userSettings, { centerX, centerY, centerZ, radius, id }) =>
         new HM(
             new Sphere(
                 {
-                    center: new Vec(centerX, centerY, -sphereDistance, 0),
-                    radius: userSettings.radius
+                    center: new Vec(centerX, centerY, centerZ || -sphereDistance, 0),
+                    radius: radius || userSettings.radius,
+                    id: id || Math.random() + ""
                 }),
             new NormalMaterial());
 
@@ -54,12 +79,15 @@ const getSceneObjectsFromUserSettings:
     ((UserSettings) => HM[]) =
     (userSettings) =>
         spheresXY.map(
-            (sphereXY) =>
+            (sphereXY, ix) =>
                 getSphereFromUserSettings(
                     userSettings,
                     {
                         centerX: sphereXY[0],
-                        centerY: sphereXY[1]
+                        centerY: sphereXY[1],
+                        centerZ: sphereXY[2],
+                        radius: sphereXY[3],
+                        id: ix + ""
                     }));
 
 const getSceneFromUserSettings:
@@ -80,6 +108,7 @@ const getSceneFromUserSettings:
 const canvas: any = document.getElementById('canvas');
 
 canvas.width = getSceneFromUserSettings(userSettings).dimu;
+
 canvas.height = getSceneFromUserSettings(userSettings).dimv;
 
 const ctx = canvas.getContext('2d');

@@ -2,6 +2,13 @@ import { HM } from './hm';
 import { Ray } from './ray';
 import { Vec } from './vec';
 
+export interface ColorAndHit
+{
+    color: Vec;
+    
+    hit?: HitInfo;
+}
+
 export interface Background
 {
     getColor(scene: Scene, tracedRay: Ray, userSettings: UserSettings);

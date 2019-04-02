@@ -9,9 +9,9 @@ export class Sphere extends Hitable
     private _center: Vec;
     private _radius: number;
 
-    constructor({ center, radius }: { center: Vec, radius: number })
+    constructor({ center, radius, id }: { center: Vec, radius: number, id: any })
     {
-        super();
+        super(id);
         this._center = center;
         this._radius = radius;
     }

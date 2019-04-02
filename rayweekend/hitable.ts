@@ -9,9 +9,21 @@ export abstract class Hitable
     abstract hitByRay(Ray): HitInfo;
     
     __hm: HM;
+    
+    private _id: string;
+    
+    constructor(id: string)
+    {
+        this._id = id;
+    }
 
     get hm(): HM
     {
         return this.__hm;
+    }
+    
+    get id(): string
+    {
+        return this._id;
     }
 }
