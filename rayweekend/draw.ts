@@ -68,11 +68,11 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
 
                         // create a ray from the camera to the pixel
 
-                        const tracedRay = new Ray(
+                        const ray = new Ray(
                             cameraPosition,
                             upperLeft.add(uvec.scale(ur), vvec.scale(vr)));
 
-                        const color = rayCast(scene, tracedRay, userSettings, { uu, vv }).color;
+                        const color = rayCast(ray, scene, userSettings, { uu, vv, depth: 0 }).color;
 
                         colors.push(color);
                     }

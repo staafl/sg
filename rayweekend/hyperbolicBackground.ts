@@ -4,7 +4,7 @@ import { Vec } from './vec';
 
 export class HyperbolicBackground implements Background
 {
-    getColor(scene: Scene, ray: Ray, userSettings: UserSettings)
+    getColor(ray: Ray, scene: Scene, userSettings: UserSettings)
     {
         // among all rays that hit the viewport at a given vv', the one with the highest
         // normalized abs(y) is the one with x = 0 (the one going directly towards the viewport)

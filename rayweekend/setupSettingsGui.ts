@@ -5,6 +5,9 @@ declare const dat: any;
 export function setupSettingsGui(userSettings: UserSettings, onChange: (any) => void) {
 	const gui = new dat.GUI();
 
+	(window as any).__nogc = (window as any).__nogc || {};
+	(window as any).__nogc.gui = gui;
+
     const userSettingsCache = {};
 
     for (const key of Object.keys(userSettings)) {
@@ -28,4 +31,18 @@ export function setupSettingsGui(userSettings: UserSettings, onChange: (any) => 
             }
         });
     }
+
+    window.addEventListener(
+        'load',
+        function() {
+
+            setTimeout(
+                function() {
+                    for (const dg of document.querySelectorAll("div.dg.main.a")) {
+                        (dg as any).style.width = "500px";
+                    }
+                },
+                1000);
+
+        });
 }

@@ -11,7 +11,7 @@ export interface ColorAndHit
 
 export interface Background
 {
-    getColor(scene: Scene, tracedRay: Ray, userSettings: UserSettings);
+    getColor(ray: Ray, scene: Scene, userSettings: UserSettings, params: any);
 }
 
 export interface HitInfo
@@ -21,11 +21,12 @@ export interface HitInfo
     hitPoint: Vec;
     hitPointNormal: Vec;
     hm: HM;
+    ray: Ray;
 }
 
 export interface Material
 {
-    getColor(hitInfo: HitInfo, scene: Scene);
+    getColor(hitInfo: HitInfo, scene: Scene, userSettings: UserSettings, params: any);
 }
 
 export interface Scene
@@ -49,5 +50,6 @@ export interface UserSettings
     vvecY: any,
     radius: any,
     pixelStep: any,
-    antialisingSamples: any
+    antialisingSamples: any,
+    diffuseAbsorption: any
 }

@@ -50,7 +50,8 @@ export class Sphere extends Hitable
             hitParam,
             hitPoint,
             hitPointNormal,
-            hm: this.hm
+            hm: this.hm,
+            ray
         };
     }
 

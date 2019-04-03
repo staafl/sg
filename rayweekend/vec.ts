@@ -13,6 +13,11 @@ export class Vec
         this._w = w;
     }
     
+    static random(): Vec
+    {
+        return new Vec(Math.random(), Math.random(), Math.random(), 0);
+    }
+    
     static average(vectors: Vec[]): Vec {
         return vectors
             .reduce((s, c) => s.add(c), new Vec(0,0,0,0))

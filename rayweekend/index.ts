@@ -1,7 +1,8 @@
 // %USER_BACK%\btsync\books\cg\Ray Tracing in a Weekend.pdf
 
 // interesting places:
-// - draw.ts, draw(Context, Scene, UserSettings) and getColor(Scene, Ray)
+// - draw.ts, draw(Context, Scene, UserSettings)
+// - rayCast.ts, rayCast(Scene, Ray)
 // - Hitable subclasses, hitByRay(Ray)
 // - Material subclasses, getColor(HitInfo
 
@@ -19,15 +20,20 @@ import { setupSettingsGui } from './setupSettingsGui';
 
 // user-editable settings
 
-const pixelStep = 20;
-const samples = 1;
+const pixelStep = 
+    //20;
+    2;
+const samples =
+    // 1;
+    4;
 
 const userSettings: UserSettings = {
     uvecX: { name: "X", initial: 2, min: -4, max: 4, step: 0.1 },
     vvecY: { name: "Y", initial: 2, min: -2, max: 2, step: 0.1 },
     radius: { name: "radius", initial: 0.2, min: 0, max: 4, step: 0.1 },
     pixelStep: { name: "pixel step", initial: pixelStep, min: 1, max: 40, step: 1 },
-    antialisingSamples: { name: "antialising samples", initial: samples, min: 1, max: 100, step: 1 }
+    antialisingSamples: { name: "antialising samples", initial: samples, min: 1, max: 100, step: 1 },
+    diffuseAbsorption: { name: "diffuse absorption", initial: 0.5, min: 0, max: 1, step: 0.1 }
 };
 
 
@@ -51,7 +57,13 @@ const dimv = 300;
 
 // const spheresXY = [[0, 0], [-0.2, -0.2], [0.2, 0]];//, [-0.4, -0.4], [0.4, 0], [-0.6, -0.6], [0.6, 0]];
 
-const spheresXY = [[0, 0], [0, -100, -sphereDistance + 1, 100]];
+const spheresXY = [[0, 0], [0, -100, -sphereDistance - 100, 100]];
+
+const pick = (ar) => {
+    return ar[Math.floor(Math.random() * ar.length)];
+}
+
+const colors = [new Vec(1, 0, 0, 0), new Vec(1, 1, 0, 0)];
 
 const getSphereFromUserSettings:
     ((
@@ -62,10 +74,11 @@ const getSphereFromUserSettings:
         centerX: number,
         centerY: number,
         centerZ?: number,
-        radius?: number
+        radius?: number,
+        color?: Vec
     })
     => HM) =
-    (userSettings, { centerX, centerY, centerZ, radius, id }) =>
+    (userSettings, { centerX, centerY, centerZ, radius, id, color }) =>
         new HM(
             new Sphere(
                 {
@@ -73,7 +86,11 @@ const getSphereFromUserSettings:
                     radius: radius || userSettings.radius,
                     id: id || Math.random() + ""
                 }),
-            new NormalMaterial());
+            new DiffuseMaterial(
+            {
+                color: color || Vec.random() || pick(colors),
+                absorption: userSettings.diffuseAbsorption
+            }));
 
 const getSceneObjectsFromUserSettings:
     ((UserSettings) => HM[]) =

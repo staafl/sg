@@ -2,7 +2,7 @@ import { ColorAndHit, HitInfo, Scene, UserSettings } from './types';
 import { Ray } from './ray';
 import { Vec } from './vec';
 
-export function rayCast(scene: Scene, ray: Ray, userSettings: UserSettings, debug: any): ColorAndHit {
+export function rayCast(ray: Ray, scene: Scene, userSettings: UserSettings, params: any): ColorAndHit {
 
     const cameraPosition = scene.camera.origin;
 
@@ -38,7 +38,9 @@ export function rayCast(scene: Scene, ray: Ray, userSettings: UserSettings, debu
         return {
             color: closestHit.hm.material.getColor(
                 closestHit,
-                scene),
+                scene,
+                userSettings,
+                params),
             hit: closestHit
         };
 
@@ -46,7 +48,11 @@ export function rayCast(scene: Scene, ray: Ray, userSettings: UserSettings, debu
 
     if (scene.background) {
         return {
-            color: scene.background.getColor(scene, ray, userSettings)
+            color: scene.background.getColor(
+                ray,
+                scene,
+                userSettings,
+                params)
         };
     }
 
