@@ -51,5 +51,6 @@ export interface UserSettings
     radius: any,
     pixelStep: any,
     antialisingSamples: any,
-    diffuseAbsorption: any
+    diffuseAbsorption: any,
+    maxDiffuseBounces: any
 }

@@ -28,7 +28,7 @@ export class DiffuseMaterial implements Material
 
     getColor(hitInfo: HitInfo, scene: Scene, userSettings: UserSettings, params: any): Vec
     {
-        if (params.depth > 2) {
+        if (params.depth > userSettings.maxDiffuseBounces) {
             return this._color;
         }
 
