@@ -2,21 +2,22 @@ import { UserSettings } from './types';
 
 declare const dat: any;
 
-export function setupSettingsGui(userSettings: UserSettings, onChange: (any) => void) {
+export function setupSettingsGui(userSettingsTemplate: UserSettings, onChange: (any) => void) {
 	const gui = new dat.GUI();
 
 	(window as any).__nogc = (window as any).__nogc || {};
 	(window as any).__nogc.gui = gui;
 
+    const userSettingsObj = {};
     const userSettingsCache = {};
 
-    for (const key of Object.keys(userSettings)) {
-        const userSetting = userSettings[key];
-        userSettings[key] = userSetting.initial
+    for (const key in userSettingsTemplate) {
+        const userSetting = userSettingsTemplate[key];
+        userSettingsObj[key] = userSetting.initial
         userSettingsCache[key] = userSetting.initial
         const step = userSetting.step || (userSetting.max - userSetting.min / 100);
         const thisSettingObject = gui.add(
-            userSettings,
+            userSettingsObj,
             key,
             userSetting.min,
             userSetting.max)
@@ -45,4 +46,6 @@ export function setupSettingsGui(userSettings: UserSettings, onChange: (any) => 
                 1000);
 
         });
+
+    return userSettingsObj;
 }

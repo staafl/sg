@@ -9,6 +9,7 @@
 import { calculateViewport } from './calculateViewport';
 import { draw } from './draw';
 import { DiffuseMaterial } from './diffuseMaterial';
+import { Global } from './global';
 import { HM } from './hm';
 import { HyperbolicBackground } from './hyperbolicBackground';
 import { NormalMaterial } from './normalMaterial';
@@ -20,19 +21,74 @@ import { Scene, UserSettings } from './types';
 import { Vec } from './vec';
 
 
+declare const CircularJSON: any;
+
+const pick = (ar, id) => {
+    if (id) {
+        if (!isNaN(id)) {
+            return ar[Number(id) % ar.length];
+        } else if (typeof id === "string") {
+            let ix = 0;
+            for (const ch of id) {
+                ix += ch.charCodeAt(0);
+            }
+            return ar[ix % ar.length];
+        }
+    }
+
+    if (ar._ix === undefined) {
+        ar._ix = 0;
+    } else {
+        ar._ix += 1;
+        ar._ix %= ar.length;
+    }
+    const toReturn = ar[ar._ix];
+    // return ar[Math.floor(Math.random() * ar.length)];
+    console.log(toReturn);
+    return toReturn;
+}
+
+
+const ndump = (...args) => {
+    return args[0];
+};
+
+const dump = (...args) => {
+    console.log(...args);
+    return args[0];
+};
+
+const firstDefined = (...args) => {
+    for (const arg of args) {
+        if (arg !== undefined) {
+            return arg;
+        }
+    }
+    return undefined;
+}
+
+
+
 // user-editable settings
 
-const pixelStep = 
-    10;
-    //2;
-const samples =
-    1;
-    //4;
+const scale = 2;
 
-const userSettings: UserSettings = {
+const pixelStep =
+    scale *
+    //10;
+    2;
+    
+const samples =
+    //1;
+    4;
+
+const initialRadius = 0.5;
+//const initialRadius = 10;
+
+const userSettingsTemplate: UserSettings = {
     uvecX: { name: "X", initial: 2, min: -4, max: 4, step: 0.1 },
     vvecY: { name: "Y", initial: 2, min: -2, max: 2, step: 0.1 },
-    radius: { name: "radius", initial: 0.2, min: 0, max: 4, step: 0.1 },
+    radius: { name: "radius", initial: initialRadius, min: 0, max: 40, step: 0.1 },
     pixelStep: { name: "pixel step", initial: pixelStep, min: 1, max: 40, step: 1 },
     antialisingSamples: { name: "antialising samples", initial: samples, min: 1, max: 100, step: 1 },
     diffuseAbsorption: { name: "diffuse absorption", initial: 0.5, min: 0, max: 1, step: 0.1 },
@@ -54,26 +110,21 @@ const cameraUpDirection = new Vec(0, 1, 0, 0);
 
 // const cameraUpDirection = new Vec(0.5, 1, 0, 0);
 
-const dimu = 300;
+const dimu = scale * 300;
 
-const dimv = 300;
+const dimv = scale * 300;
 
-// const spheresXY = [[0, 0], [-0.2, -0.2], [0.2, 0]];//, [-0.4, -0.4], [0.4, 0], [-0.6, -0.6], [0.6, 0]];
+// const sphereDefs = [[0, 0], [-0.2, -0.2], [0.2, 0]];//, [-0.4, -0.4], [0.4, 0], [-0.6, -0.6], [0.6, 0]];
 
-const spheresXY = [[0, 0], [0, -100, -sphereDistance - 100, 100]];
-
-const pick = (ar) => {
-    if (ar._ix === undefined) {
-        ar._ix = 0;
-    } else {
-        ar._ix += 1;
-        ar._ix %= ar.length;
-    }
-    const toReturn = ar[ar._ix];
-    // return ar[Math.floor(Math.random() * ar.length)];
-    console.log(toReturn);
-    return toReturn;
-}
+const bigRadius = 20;
+const bigY = -bigRadius - initialRadius + 0.5;
+const bigZ = dump(Math.sqrt((bigRadius + initialRadius) * (bigRadius + initialRadius) - bigY * bigY), "bigZ");
+dump({ bigZ, bigY, bigRadius, initialRadius }, "spheres");
+dump(bigY * bigY + bigZ * bigZ, "stuff");
+dump(Math.sqrt(bigY * bigY + bigZ * bigZ) - bigRadius - initialRadius, "error");
+const sphereDefs: any[] = [[0, 0], { x: 0, y: bigY, z: bigZ, r: bigRadius}];
+// const sphereDistance = 300;
+// const sphereDefs: any[] = [[0, 0], { x: 0, y: -500, z: -sphereDistance - 90, r: 500 }];
 
 const colors = [new Vec(1, 0, 0, 0), new Vec(1, 1, 0, 0)];
 
@@ -94,31 +145,32 @@ const getSphereFromUserSettings:
         new HM(
             new Sphere(
                 {
-                    center: new Vec(centerX, centerY, centerZ || -sphereDistance, 0),
-                    radius: radius || userSettings.radius,
-                    id: id || Math.random() + ""
+                    center: ndump(new Vec(centerX, centerY, centerZ || -sphereDistance, 0), "c"),
+                    radius: ndump(radius || userSettings.radius, "r"),
+                    id: ndump(id || Math.random() + "", "id")
                 }),
-                new NormalMaterial()
-//            new DiffuseMaterial(
-//            {
-//                color: color || Vec.random() || pick(colors),
-//                absorption: userSettings.diffuseAbsorption
-//            })
+                //new NormalMaterial()
+            new DiffuseMaterial(
+            {
+                color: color || pick(colors, id) || Vec.random(),
+                absorption: userSettings.diffuseAbsorption
+            })
             );
 
 const getSceneObjectsFromUserSettings:
     ((UserSettings) => HM[]) =
     (userSettings) =>
-        spheresXY.map(
-            (sphereXY, ix) =>
+        sphereDefs.map(
+            (sphereDef, ix) =>
                 getSphereFromUserSettings(
                     userSettings,
                     {
-                        centerX: sphereXY[0],
-                        centerY: sphereXY[1],
-                        centerZ: sphereXY[2],
-                        radius: sphereXY[3],
-                        id: ix + ""
+                        ...sphereDef,
+                        centerX: firstDefined(sphereDef.x, sphereDef[0]),
+                        centerY: firstDefined(sphereDef.y, sphereDef[1]),
+                        centerZ: firstDefined(sphereDef.z, sphereDef[2]),
+                        radius: firstDefined(sphereDef.r, sphereDef[3]),
+                        id: firstDefined(sphereDef.id, sphereDef[4], ix + ""),
                     }));
 
 const getSceneFromUserSettings:
@@ -134,27 +186,29 @@ const getSceneFromUserSettings:
     });
 
 
+
 // setup drawing canvas and get its context 'ctx'
 
 const canvas: any = document.getElementById('canvas');
 
-canvas.width = getSceneFromUserSettings(userSettings).dimu;
+canvas.width = dimu;
 
-canvas.height = getSceneFromUserSettings(userSettings).dimv;
+canvas.height = dimv;
 
 const ctx = canvas.getContext('2d');
 
 
 // do the thing
 
-const scene = getSceneFromUserSettings(userSettings);
+let userSettings;
+
 const drawScene = () =>
     draw(
         ctx,
-        scene,
+        getSceneFromUserSettings(userSettings),
         userSettings);
 
-setupSettingsGui(userSettings, drawScene);
+userSettings = setupSettingsGui(userSettingsTemplate, drawScene);
 
 drawScene();
 
@@ -164,6 +218,10 @@ canvas.addEventListener(
     'mousemove',
     function(evt) {
         // hitinfoElem.innerText = evt.offsetX + " " + evt.offsetY;
+        const { scene, userSettings } = Global.lastDrawn;
+        if (!scene) {
+            return;
+        }
         const { upperLeft, uvec, vvec } = calculateViewport(scene, userSettings);
         const ray = new Ray(
             scene.camera.origin,
@@ -171,14 +229,19 @@ canvas.addEventListener(
                 uvec.scale(evt.offsetX / scene.dimu),
                 vvec.scale(evt.offsetY / scene.dimv)));
         const ch = rayCast(ray, scene, userSettings, { depth: 0 });
+        const scaledColor = ch.color.scale(255.99);
         hitinfoElem.innerText = JSON.stringify({
             x: evt.offsetX,
             y: evt.offsetY,
-            color: ch.color,
+            color: {
+                r: Math.floor(scaledColor.x),
+                g: Math.floor(scaledColor.y),
+                b: Math.floor(scaledColor.z),
+            },
             id: ch.hit && ch.hit.hm && ch.hit.hm.hitable.id
         });
     });
-    
+
 
 
 

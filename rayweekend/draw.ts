@@ -1,12 +1,14 @@
 import { calculateViewport } from './calculateViewport';
-import { Scene, UserSettings, HitInfo } from './types';
+import { Global } from './global';
 import { Ray } from './ray';
 import { rayCast } from './rayCast';
+import { Scene, UserSettings, HitInfo } from './types';
 import { Vec } from './vec';
 
 export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
 
     const started = new Date().getTime();
+    
 
     clearCanvas(ctx, scene.dimu, scene.dimv);
 
@@ -60,6 +62,7 @@ export function draw(ctx: any, scene: Scene, userSettings: UserSettings) {
         1);
     }
 
+    Global.lastDrawn = { scene, userSettings };
     console.log(`drawing done: ${new Date().getTime() - started} ms`);
 }
 
