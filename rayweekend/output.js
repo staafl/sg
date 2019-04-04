@@ -331,12 +331,10 @@ with (function() {
      ;
      ;
 // user-editable settings
-const pixelStep = 
-//20;
-2;
-const samples = 
-// 1;
-4;
+const pixelStep = 10;
+//2;
+const samples = 1;
+//4;
 const userSettings = {
     uvecX: { name: "X", initial: 2, min: -4, max: 4, step: 0.1 },
     vvecY: { name: "Y", initial: 2, min: -2, max: 2, step: 0.1 },
@@ -365,8 +363,10 @@ const pick = (ar) => {
         ar._ix += 1;
         ar._ix %= ar.length;
     }
-    return ar[ar._ix];
+    const toReturn = ar[ar._ix];
     // return ar[Math.floor(Math.random() * ar.length)];
+    console.log(toReturn);
+    return toReturn;
 };
 const colors = [new Vec(1, 0, 0, 0), new Vec(1, 1, 0, 0)];
 const getSphereFromUserSettings = (userSettings, { centerX, centerY, centerZ, radius, id, color }) => new HM(new Sphere({

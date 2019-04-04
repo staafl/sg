@@ -23,11 +23,11 @@ import { Vec } from './vec';
 // user-editable settings
 
 const pixelStep = 
-    //20;
-    2;
+    10;
+    //2;
 const samples =
-    // 1;
-    4;
+    1;
+    //4;
 
 const userSettings: UserSettings = {
     uvecX: { name: "X", initial: 2, min: -4, max: 4, step: 0.1 },
@@ -69,8 +69,10 @@ const pick = (ar) => {
         ar._ix += 1;
         ar._ix %= ar.length;
     }
-    return ar[ar._ix];
+    const toReturn = ar[ar._ix];
     // return ar[Math.floor(Math.random() * ar.length)];
+    console.log(toReturn);
+    return toReturn;
 }
 
 const colors = [new Vec(1, 0, 0, 0), new Vec(1, 1, 0, 0)];
